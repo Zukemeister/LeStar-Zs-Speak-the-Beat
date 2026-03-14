@@ -165,19 +165,26 @@ body.fs-mode .hdr,
 body.fs-mode #speed-notice,
 body.fs-mode #go-btn { display:none; }
 body.fs-mode .beat-display {
-  position:fixed; inset:0; border-radius:0;
-  border:none; z-index:50;
-  display:flex; flex-direction:column;
+  position:fixed !important;
+  top:0 !important; left:0 !important;
+  right:0 !important; bottom:0 !important;
+  width:100vw !important; height:100vh !important;
+  max-width:none !important;
+  border-radius:0 !important;
+  border:none !important;
+  z-index:500 !important;
+  display:flex !important; flex-direction:column;
   align-items:center; justify-content:center;
-  max-width:100%;
+  margin:0 !important; padding:20px !important;
+  box-sizing:border-box;
 }
 body.fs-mode .beat-num { 
-  font-size:clamp(200px,55vw,420px);
-  min-height:0;
+  font-size:clamp(220px,60vw,480px) !important;
+  min-height:0 !important;
 }
 body.fs-mode .pips { margin-bottom:24px; }
-body.fs-mode .press-hint { font-size:clamp(14px,4vw,20px); }
-body.fs-mode #fs-btn { top:20px; right:20px; width:36px; height:36px; font-size:18px; }
+body.fs-mode .press-hint { font-size:clamp(16px,4vw,22px); }
+body.fs-mode #fs-btn { top:20px; right:20px; width:40px; height:40px; font-size:20px; }
 
 /* Help button */
 #help-btn {
