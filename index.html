@@ -6,2438 +6,620 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="LeStar Z">
-<meta name="theme-color" content="#141414">
-<title>LeStar Z's Speak the Beat</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,600;1,300;1,600&family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#1a361a">
+<title>LeStar Z's Aimer</title>
 <style>
-:root {
-  --bg:         #141414;
-  --felt:       #1a361a;
-  --felt-dark:  #112411;
-  --gold:       #e8a030;
-  --gold-dim:   #7a4a10;
-  --white:      #f2f2ee;
-  --white-mid:  rgba(242,242,238,0.72);
-  --white-dim:  rgba(242,242,238,0.38);
-  --border:     rgba(232,160,48,0.2);
-  --border-gold:rgba(232,160,48,0.28);
-  --glow:       rgba(232,160,48,0.45);
-  --red:        #c83020;
-  --orange:     #e87030;
-  --blue:       #70c0f0;
-  --pink:       #e870b0;
-  --green-hi:   #88ee88;
-  --speed-limit: 120;
-}
+@import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;0,900;1,900&family=Playfair+Display:ital,wght@1,700&display=swap');
 * { box-sizing:border-box; margin:0; padding:0; }
-html,body {
-  background:var(--bg);
-  min-height:100vh;
-  display:flex; flex-direction:column; align-items:center;
-  font-family:'Lato',sans-serif;
-  color:var(--white);
-  padding:20px 16px 40px;
-  background-image:radial-gradient(ellipse at 50% 0%, rgba(26,54,26,0.55) 0%, transparent 68%);
-}
-#flash-overlay {
-  position:fixed; inset:0; pointer-events:none; z-index:999;
-  background:var(--gold); opacity:0; transition:opacity 0.04s;
-}
-
-/* ── Header ── */
-.hdr { text-align:center; margin-bottom:20px; position:relative; z-index:1; }
-.hdr-title { display:flex; align-items:center; justify-content:center; line-height:1; margin-bottom:2px; }
-.t-lestar { font-family:'Cormorant Garamond',serif; font-style:italic; font-weight:600; font-size:clamp(14px,4vw,22px); color:var(--gold); letter-spacing:-0.02em; }
-.t-z      { font-family:'Lato',sans-serif; font-style:italic; font-weight:900; font-size:clamp(28px,8vw,46px); color:var(--gold); line-height:1; margin:0 2px 0 0; }
-.t-rest   { font-family:'Cormorant Garamond',serif; font-style:italic; font-weight:600; font-size:clamp(14px,4vw,22px); color:var(--gold); }
-.hdr-sub  { font-family:'Cormorant Garamond',serif; font-style:italic; font-weight:300; font-size:clamp(20px,5.5vw,32px); color:var(--white); letter-spacing:0.06em; }
-.hdr-tag  { font-size:10px; color:var(--white-mid); letter-spacing:0.18em; text-transform:uppercase; margin-top:4px; font-weight:600; }
-
-/* ── Beat display ── */
-.beat-display {
-  width:100%; max-width:420px; position:relative; z-index:1;
-  background:var(--felt);
-  border:1px solid var(--border-gold);
-  border-radius:12px;
-  padding:20px 16px 18px;
-  margin-bottom:14px;
-  box-shadow:0 4px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
-}
-.pips { display:flex; justify-content:center; gap:10px; margin-bottom:14px; flex-wrap:wrap; }
-.pip {
-  width:13px; height:13px; border-radius:50%;
-  background:rgba(242,242,238,0.12); border:1.5px solid rgba(242,242,238,0.25);
-  transition:background 0.04s, box-shadow 0.04s, transform 0.04s;
-}
-.pip.one { width:18px; height:18px; margin-top:-2px; background:rgba(232,160,48,0.2); border-color:rgba(232,160,48,0.5); }
-.pip.active { background:var(--white); box-shadow:0 0 12px rgba(242,242,238,0.6); transform:scale(1.25); }
-.pip.one.active { background:var(--gold); box-shadow:0 0 22px var(--glow); }
-
-.beat-num {
-  font-family:'Cormorant Garamond',serif; font-weight:300;
-  font-size:clamp(120px,32vw,220px); line-height:1;
-  text-align:center; color:var(--gold);
-  text-shadow:0 0 40px rgba(232,160,48,0.2);
-  min-height:clamp(120px,32vw,220px);
-  display:flex; align-items:center; justify-content:center;
-  transition:transform 0.05s, color 0.05s, text-shadow 0.05s;
-}
-.beat-num.pulse     { transform:scale(1.09); color:var(--white); text-shadow:0 0 40px rgba(232,160,48,0.8); }
-.beat-num.one-pulse { transform:scale(1.13); color:var(--white); text-shadow:0 0 60px rgba(232,160,48,1); }
-
-.beat-word {
-  font-family:'Cormorant Garamond',serif; font-style:italic; font-weight:300;
-  font-size:clamp(16px,4.5vw,24px); text-align:center;
-  color:var(--white-mid); letter-spacing:0.1em;
-  min-height:30px; margin-top:4px; transition:color 0.06s;
-}
-.beat-word.flash { color:var(--white); }
-
-.subdiv-word {
-  font-family:'Lato',sans-serif; font-weight:700;
-  font-size:clamp(10px,3vw,13px); text-align:center;
-  color:var(--white-dim); letter-spacing:0.15em; text-transform:uppercase;
-  min-height:18px; margin-top:3px;
-}
-
-/* ── Controls ── */
-.controls { width:100%; max-width:420px; display:flex; flex-direction:column; gap:11px; position:relative; z-index:1; }
-
-.ctrl-panel {
-  background:var(--felt-dark);
-  border:1px solid var(--border);
-  border-radius:10px;
-  padding:12px 14px;
-}
-.ctrl-label { font-size:9px; font-weight:700; letter-spacing:0.18em; text-transform:uppercase; color:rgba(232,160,48,0.8); margin-bottom:9px; }
-
-/* BPM */
-.bpm-row { display:flex; align-items:center; gap:12px; }
-/* Hide number input spinners */
-#bpm-val::-webkit-outer-spin-button,
-#bpm-val::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
-.bpm-val  { font-family:'Cormorant Garamond',serif; font-size:38px; font-weight:600; color:var(--gold); min-width:62px; text-align:right; line-height:1; }
-.bpm-unit { font-size:9px; color:var(--white-dim); letter-spacing:0.1em; }
-input[type=range] { flex:1; -webkit-appearance:none; height:4px; background:rgba(242,242,238,0.15); border-radius:2px; outline:none; }
-input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:22px; height:22px; border-radius:50%; background:var(--gold); border:2px solid var(--bg); box-shadow:0 0 10px rgba(232,160,48,0.4); cursor:pointer; }
-.tempo-name { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:12px; color:var(--white-dim); margin-top:3px; text-align:right; letter-spacing:0.05em; }
-
-/* Speed notice */
-.speed-notice {
-  font-size:10px; color:var(--white-dim); margin-top:7px;
-  min-height:14px; letter-spacing:0.03em;
-  transition:opacity 0.2s;
-}
-
-/* GO button */
-#go-btn {
-  width:100%; max-width:420px;
-  padding:22px;
-  border-radius:12px;
-  border:2px solid var(--red);
-  font-family:'Cormorant Garamond',serif; font-size:32px; font-weight:600;
-  letter-spacing:0.12em;
-  cursor:pointer; transition:all 0.15s;
-  background:rgba(200,48,32,0.22);
-  color:var(--red);
-  position:relative; z-index:1;
-  margin-top:4px;
-  display:block;
-}
-#go-btn:active { background:rgba(200,48,32,0.45); transform:scale(0.98); }
-
-/* Fullscreen button */
-#fs-btn {
-  position:absolute; top:10px; right:10px;
-  width:28px; height:28px; border-radius:50%;
-  border:1px solid var(--border-gold);
-  background:rgba(232,160,48,0.12);
-  color:var(--gold); font-size:13px;
-  cursor:pointer; display:flex; align-items:center; justify-content:center;
-  transition:background 0.15s; z-index:10;
-}
-#fs-btn:hover { background:rgba(232,160,48,0.28); }
-
-/* Fullscreen mode — hide everything except beat display */
-body.fs-mode .ctrl-panel,
-body.fs-mode .tap-btn,
-body.fs-mode .hdr,
-body.fs-mode #speed-notice,
-body.fs-mode #go-btn { display:none; }
-body.fs-mode .beat-display {
-  position:fixed !important;
-  top:0 !important; left:0 !important;
-  right:0 !important; bottom:0 !important;
-  width:100vw !important; height:100vh !important;
-  max-width:none !important;
-  border-radius:0 !important;
-  border:none !important;
-  z-index:500 !important;
-  display:flex !important; flex-direction:column;
-  align-items:center; justify-content:center;
-  margin:0 !important; padding:20px !important;
-  box-sizing:border-box;
-}
-body.fs-mode .beat-num { 
-  font-size:clamp(220px,60vw,480px) !important;
-  min-height:0 !important;
-}
-body.fs-mode .pips { margin-bottom:24px; }
-body.fs-mode .press-hint { font-size:clamp(16px,4vw,22px); }
-body.fs-mode #fs-btn { top:20px; right:20px; width:40px; height:40px; font-size:20px; }
-
-/* Help button */
-#help-btn {
-  position:absolute; top:0; left:0;
-  width:28px; height:28px;
-  border-radius:50%;
-  border:1px solid var(--border-gold);
-  background:rgba(232,160,48,0.12);
-  color:var(--gold);
-  font-family:'Lato',sans-serif; font-weight:900; font-size:15px;
-  cursor:pointer; line-height:1;
-  display:flex; align-items:center; justify-content:center;
-  transition:background 0.15s;
-}
-#help-btn:hover { background:rgba(232,160,48,0.28); }
-
-/* Help overlay */
-#help-overlay {
-  display:none; position:fixed; inset:0; z-index:100;
-  background:rgba(0,0,0,0.75);
-  align-items:center; justify-content:center;
-  padding:20px;
-}
-#help-overlay.open { display:flex; }
-#help-card {
-  background:#1a2a1a;
-  border:1px solid var(--border-gold);
-  border-radius:12px;
-  padding:24px 22px 22px;
-  max-width:420px; width:100%;
-  position:relative;
-  max-height:90vh; overflow-y:auto;
-}
-#help-card h2 {
-  font-family:'Cormorant Garamond',serif; font-style:italic;
-  font-size:22px; color:var(--gold);
-  margin-bottom:16px;
-}
-#help-card p {
-  font-size:14px; line-height:1.7;
-  color:var(--white-mid);
-  margin-bottom:12px;
-}
-#help-card p:last-child { margin-bottom:0; }
-#help-close {
-  position:absolute; top:12px; right:14px;
-  background:none; border:none;
-  color:var(--white-dim); font-size:18px; cursor:pointer;
-}
-#help-close:hover { color:var(--white); }
-.hl-gold   { color:var(--gold);     font-weight:700; }
-.hl-blue   { color:var(--blue);     font-weight:700; }
-.hl-pink   { color:var(--pink);     font-weight:700; }
-.hl-orange { color:var(--orange);   font-weight:700; }
-.hl-green  { color:var(--green-hi); font-weight:700; }
-
-/* Tap */
-.tap-btn {
-  width:100%; padding:14px;
-  background:rgba(26,54,26,0.6);
-  border:1px solid var(--border);
-  border-radius:8px;
-  color:var(--gold);
-  font-family:'Cormorant Garamond',serif; font-size:20px; font-weight:600; letter-spacing:0.08em;
-  cursor:pointer; transition:all 0.1s;
-}
-.tap-btn:active { background:rgba(232,160,48,0.2); color:var(--white); transform:scale(0.98); }
-
-/* Pills */
-.pill-row { display:flex; gap:6px; flex-wrap:wrap; }
-.pill {
-  flex:1; min-width:36px; padding:8px 4px;
-  background:rgba(255,255,255,0.05);
-  border:1px solid var(--border);
-  border-radius:7px;
-  color:var(--white-mid);
-  font-family:'Cormorant Garamond',serif; font-size:17px; font-weight:600;
-  cursor:pointer; transition:all 0.12s; text-align:center;
-}
-.pill.sm { font-family:'Lato',sans-serif; font-size:10px; font-weight:700; letter-spacing:0.05em; padding:8px 5px; }
-.pill:hover { background:rgba(232,160,48,0.1); color:var(--white); }
-.pill.active { background:rgba(232,160,48,0.2); border-color:var(--gold); color:var(--gold); box-shadow:0 0 8px rgba(232,160,48,0.15); }
-.pill.disabled { opacity:0.28; pointer-events:none; }
-
-/* Toggle row */
-.toggle-row { display:flex; align-items:center; justify-content:space-between; gap:10px; }
-.toggle-label { font-size:13px; color:var(--white-mid); }
-.toggle { position:relative; width:44px; height:24px; flex-shrink:0; }
-.toggle input { opacity:0; width:0; height:0; }
-.toggle-track {
-  position:absolute; inset:0;
-  background:rgba(255,255,255,0.1); border-radius:12px;
-  border:1px solid var(--border);
-  cursor:pointer; transition:background 0.2s;
-}
-.toggle input:checked + .toggle-track { background:rgba(242,242,238,0.25); border-color:var(--white-mid); }
-.toggle-track::after {
-  content:''; position:absolute; top:3px; left:3px;
-  width:16px; height:16px; border-radius:50%;
-  background:rgba(242,242,238,0.4);
-  transition:transform 0.2s, background 0.2s;
-}
-.toggle input:checked + .toggle-track::after { transform:translateX(20px); background:var(--white); }
-
-/* Voice */
-.voice-sel {
-  width:100%;
-  background:rgba(255,255,255,0.05);
-  border:1px solid var(--border);
-  border-radius:7px;
-  color:var(--white);
-  font-family:'Lato',sans-serif; font-size:13px;
-  padding:9px 10px; outline:none; cursor:pointer;
-  -webkit-appearance:none; appearance:none;
-  margin-bottom:8px;
-}
-.voice-filter-row { display:flex; align-items:center; gap:8px; font-size:11px; color:var(--white-mid); }
-.voice-filter-row input[type=checkbox] { accent-color:var(--white); width:14px; height:14px; cursor:pointer; }
-
-
-/* Press hint */
-.press-hint {
-  font-family:'Cormorant Garamond',serif; font-size:20px; font-weight:600;
-  letter-spacing:0.08em; color:var(--gold); text-align:center; margin-top:16px;
-  transition:color 0.2s, opacity 0.2s;
-}
-.press-hint em { font-style:italic; }
-.beat-display:active { opacity:0.88; }
-.beat-display.running .press-hint { color:var(--white); opacity:0.7; }
-.beat-display.running { border-color:rgba(232,160,48,0.45); }
-/* (start btn removed) */
-.start-btn-unused {
-  width:100%; padding:18px; border-radius:10px; border:none;
-  font-family:'Cormorant Garamond',serif; font-size:26px; font-weight:600; letter-spacing:0.1em;
-  cursor:pointer; transition:all 0.15s;
-  background:rgba(242,242,238,0.1);
-  border:1px solid rgba(242,242,238,0.3);
-  color:var(--white);
-}
-.start-btn:hover { background:rgba(242,242,238,0.18); box-shadow:0 0 28px rgba(242,242,238,0.1); }
-.start-btn.running { background:rgba(200,48,32,0.15); border-color:var(--red); color:#f08070; }
-.start-btn.running:hover { background:rgba(200,48,32,0.25); }
+html,body { background:#141414; font-family:'Lato',sans-serif; display:flex; flex-direction:column; align-items:center; padding:12px 8px 32px; min-height:100vh; }
+.card { background:#1a361a; border-radius:10px; box-shadow:0 8px 32px rgba(0,0,0,0.7); width:100%; max-width:700px; padding:14px 12px 16px; border:2px solid #2a4e2a; }
+.hdr { text-align:center; margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.07); }
+h1 { display:flex; align-items:center; justify-content:center; line-height:1; margin-bottom:3px; }
+.t-lestar { font-family:'Playfair Display',serif; font-style:italic; font-weight:700; font-size:clamp(16px,4.5vw,24px); color:#f0df70; }
+.t-z { font-family:'Lato',sans-serif; font-style:italic; font-weight:900; font-size:clamp(30px,8vw,46px); color:#f0df70; line-height:1; display:inline-flex; align-items:center; margin:0 1px 0 2px; }
+.t-rest { font-family:'Playfair Display',serif; font-style:italic; font-weight:700; font-size:clamp(16px,4.5vw,24px); color:#f0df70; }
+.sub { font-size:10px; color:rgba(255,255,255,0.35); letter-spacing:0.07em; }
+.diagram-wrap { border:2px solid #000; border-radius:4px; overflow:hidden; margin-bottom:10px; }
+.svg-box { position:relative; width:100%; overflow:hidden; background:rgba(0,0,0,0.22); }
+.svg-box.top-box { padding-bottom:calc(210 / 460 * 100%); }
+.svg-box.bot-box { padding-bottom:calc(338 / 460 * 100%); }
+.svg-box svg { position:absolute; top:0; left:0; width:100%; height:100%; }
+.sep { height:2px; background:#000; }
+.ctrl { margin-top:4px; }
+.sgroup { background:rgba(0,0,0,0.18); border-radius:7px; padding:7px 10px 6px; margin-bottom:6px; border:1px solid rgba(255,255,255,0.07); }
+.sgroup-title { font-size:9px; font-weight:700; letter-spacing:0.13em; text-transform:uppercase; color:#ddd; margin-bottom:6px; }
+.srow { display:flex; align-items:center; gap:8px; }
+.slbl { font-size:11px; color:#e8e8e8; min-width:62px; font-weight:700; }
+.sval { font-size:15px; font-weight:900; min-width:76px; text-align:right; white-space:nowrap; }
+.orange{color:#e87030;} .blue{color:#70c0f0;} .pink{color:#e870b0;} .yellow{color:#f0df70;} .green{color:#88ee88;}
+input[type=range] { flex:1; -webkit-appearance:none; height:5px; background:rgba(255,255,255,0.15); border-radius:3px; outline:none; touch-action:none; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:22px; height:22px; border-radius:50%; cursor:pointer; border:2px solid #1a361a; box-shadow:0 1px 5px rgba(0,0,0,0.5); }
+#sl-cut::-webkit-slider-thumb   { background:#e87030; width:30px; height:30px; }
+#sl-cut { height:8px; }
+#sl-speed::-webkit-slider-thumb { background:#70c0f0; }
+#sl-spin::-webkit-slider-thumb  { background:#e870b0; }
+#sl-dist::-webkit-slider-thumb  { background:#a0d0a0; }
+#sl-bias::-webkit-slider-thumb  { background:#c890f0; }
+.readout { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; margin-top:8px; }
+.ri { background:rgba(0,0,0,0.3); border-radius:6px; padding:10px 6px; text-align:center; border:1px solid rgba(255,255,255,0.08); min-height:82px; display:flex; flex-direction:column; justify-content:center; overflow:hidden; }
+.ri-lbl { font-size:11px; color:#ccc; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:4px; flex-shrink:0; }
+.ri-val { font-size:clamp(26px,7vw,38px); font-weight:900; line-height:1; white-space:nowrap; }
+#r-frc { font-size:clamp(20px,5.5vw,30px); }
+.comp-row { display:flex; justify-content:center; align-items:center; gap:6px; margin-top:6px; font-size:13px; color:rgba(255,255,255,0.55); }
+.comp-val { font-weight:900; font-size:15px; }
 </style>
 </head>
 <body>
-<div id="flash-overlay"></div>
-<div id="err-banner" style="display:none;position:fixed;top:0;left:0;right:0;background:#c83020;color:#fff;font-size:13px;padding:8px 12px;z-index:999;word-break:break-all;"></div>
 
-<div class="hdr">
-  <button id="help-btn" onclick="document.getElementById('help-overlay').classList.add('open')" aria-label="Help">?</button>
-  <div class="hdr-title">
-    <span class="t-lestar">LeStar</span><span class="t-z">Z</span><span class="t-rest">'s</span>
-  </div>
-  <div class="hdr-sub" style="color:#f0df70" data-i18n="subtitle">Speak the Beat</div>
-<div style="width:100%;max-width:320px;margin:4px auto 0;line-height:0;">
-<svg viewBox="0 0 320 36" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;">
-  <polyline fill="none" stroke="#f0df70" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"
-  points="
-    0,20
-    6,20 7,19 8,21 9,20
-    14,20 15,19 16,21 17,20
-    20,21 21,19 22,21 23,20
-    28,20
-    29,8 31,28 33,10 34,20
-    40,20 41,19 42,21 43,20
-    46,21 47,19 48,21 49,20
-    54,20
-    56,8 58,28 60,10 61,20
-    68,20 69,19 70,21 71,20
-    75,20
-    77,8 79,28 81,10 82,20
-    87,20 88,19 89,21 90,20
-    93,21 94,19 95,21 96,20
-    101,20
-    104,8 106,28 108,10 109,20
-    115,20 116,19 117,21 118,20
-    120,21 121,19 122,21 123,20
-    127,20
-    129,8 131,28 133,10 134,20
-    140,20 141,19 142,21 143,20
-    148,20
-    151,8 153,28 155,10 156,20
-    162,20 163,19 164,21 165,20
-    168,21 169,19 170,21 171,20
-    176,20
-    178,8 180,28 182,10 183,20
-    189,20 190,19 191,21 192,20
-    196,20
-    200,8 202,28 204,10 205,20
-    210,20 211,19 212,21 213,20
-    217,21 218,19 219,21 220,20
-    226,20
-    228,8 230,28 232,10 233,20
-    238,20 239,19 240,21 241,20
-    244,21 245,19 246,21 247,20
-    252,20
-    255,8 257,28 259,10 260,20
-    266,20 267,19 268,21 269,20
-    273,20
-    276,8 278,28 280,10 281,20
-    286,20 287,19 288,21 289,20
-    292,21 293,19 294,21 295,20
-    300,20
-    302,8 304,28 306,10 307,20
-    313,20 314,19 315,21 316,20
-    320,20
-  "/>
+<!-- Persistent gradient defs — lives in the DOM permanently, never replaced.
+     All SVG fill="url(#...)" references point here. Mobile safe. -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <radialGradient id="CGT" cx="36%" cy="28%">
+      <stop offset="0%"   stop-color="#ffffff"/>
+      <stop offset="48%"  stop-color="#d8d2c4"/>
+      <stop offset="100%" stop-color="#908070"/>
+    </radialGradient>
+    <radialGradient id="OGT" cx="34%" cy="26%">
+      <stop offset="0%"   stop-color="#ff8a8a"/>
+      <stop offset="35%"  stop-color="#d01818"/>
+      <stop offset="75%"  stop-color="#7a0a0a"/>
+      <stop offset="100%" stop-color="#3c0404"/>
+    </radialGradient>
+    <radialGradient id="CGB" cx="36%" cy="28%">
+      <stop offset="0%"   stop-color="#ffffff"/>
+      <stop offset="48%"  stop-color="#d8d2c4"/>
+      <stop offset="100%" stop-color="#908070"/>
+    </radialGradient>
+    <radialGradient id="OGB" cx="34%" cy="26%">
+      <stop offset="0%"   stop-color="#ff8a8a"/>
+      <stop offset="35%"  stop-color="#d01818"/>
+      <stop offset="75%"  stop-color="#7a0a0a"/>
+      <stop offset="100%" stop-color="#3c0404"/>
+    </radialGradient>
+    <radialGradient id="OGdB" cx="34%" cy="26%">
+      <stop offset="0%"   stop-color="#4a1a1a"/>
+      <stop offset="55%"  stop-color="#2c0808"/>
+      <stop offset="100%" stop-color="#140202"/>
+    </radialGradient>
+    <marker id="Tarr" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <polygon points="0,0 9,3.5 0,7" fill="rgba(255,255,255,0.92)"/>
+    </marker>
+  </defs>
 </svg>
-</div>
-  <p class="hdr-tag" data-i18n="tagline">A metronome that counts aloud</p>
-</div>
 
-<div id="help-overlay">
-  <div id="help-card">
-    <button id="help-close" onclick="document.getElementById('help-overlay').classList.remove('open')" aria-label="Close">✕</button>
-    <h2 data-i18n="helpTitle">How to use</h2>
-
-    <p data-help="0"><span class="hl-gold">Tap the green panel</span> or press <span class="hl-gold">spacebar</span> to start and stop.</p>
-
-    <p data-help="1"><span class="hl-blue" data-i18n="timeSig">Time Signature</span> sets how many beats are in each bar. The first beat is always accented.</p>
-
-    <p data-help="2"><span class="hl-pink" data-i18n="subdiv">Subdivision</span> adds quiet in-between clicks — 8th notes or 16th notes — so you can feel the subdivisions without counting them aloud.</p>
-
-    <p data-help="3"><span class="hl-orange" data-i18n="countStyle">Count Style</span> controls what the voice says. <em data-i18n="allBeats">All beats</em> counts every beat by number. <em data-i18n="oneOnly">One only</em> calls the downbeat only — useful at fast tempos. <em data-i18n="silent">Silent</em> lets the clicks do the work.</p>
-
-    <p data-help="4"><span class="hl-green" data-i18n="clickTone">Click Tone</span> changes the sound of the click. Try <em data-i18n="bell">Bell</em> for a chime, <em data-i18n="beep">Beep</em> for a classic electronic metronome, or <em data-i18n="soft">Soft</em> for quiet practice.</p>
-
-    <p data-help="5"><span class="hl-gold" data-i18n="tapBtn">Tap <em>HERE</em> to Set Tempo</span> — tap the button repeatedly in time and the BPM will lock to your tapping.</p>
-
-    <p data-help="7">The <span class="hl-gold">Voice</span> selector lets you choose who counts. Check <em>English only</em> to filter the list.</p>
+<div class="card">
+  <div class="hdr" style="position:relative;">
+    <button onclick="document.getElementById('info-overlay').style.display='flex'"
+      style="position:absolute;left:0;top:50%;transform:translateY(-50%);
+             width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,0.35);
+             background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.7);
+             font-family:'Lato',sans-serif;font-size:14px;font-weight:900;
+             cursor:pointer;line-height:1;">?</button>
+    <button id="hand-btn" onclick="toggleHand()"
+      style="position:absolute;right:0;top:50%;transform:translateY(-50%);
+             padding:4px 10px;border-radius:14px;
+             border:2px solid rgba(240,223,112,0.5);
+             background:rgba(240,223,112,0.1);color:#f0df70;
+             font-family:'Lato',sans-serif;font-size:11px;font-weight:900;
+             letter-spacing:0.06em;cursor:pointer;line-height:1.2;">
+      ◀ LEFT
+    </button>
+    <button id="table-btn" onclick="toggleTable()"
+      style="position:absolute;right:0;bottom:-22px;
+             padding:3px 9px;border-radius:12px;
+             border:1px solid rgba(160,208,160,0.4);
+             background:rgba(160,208,160,0.08);color:#a0d0a0;
+             font-family:'Lato',sans-serif;font-size:10px;font-weight:900;
+             letter-spacing:0.06em;cursor:pointer;line-height:1.2;">
+      POOL
+    </button>
+    <h1><span class="t-lestar">LeStar&nbsp;</span><span class="t-z">Z</span><span class="t-rest">'s Aimer</span></h1>
+    <p class="sub">Set the angle you want · adjust for speed & spin · one aim point</p>
   </div>
-</div>
 
-<div class="beat-display" id="beat-display" onclick="toggleMetronome()" style="cursor:pointer;position:relative;">
-  <button id="fs-btn" onclick="event.stopPropagation();toggleFS()" title="Full screen">⛶</button>
-  <div class="pips" id="pips"></div>
-  <div class="beat-num" id="beat-num">—</div>
-  <div class="beat-word" id="beat-word"></div>
-  <div class="subdiv-word" id="subdiv-word"></div>
-  <div class="press-hint" id="press-hint" data-i18n="pressStart">Press <em>HERE</em> to <em>START</em></div>
-</div>
+  <div class="diagram-wrap">
+    <div class="svg-box top-box">
+      <svg id="topsvg" viewBox="0 0 460 210" preserveAspectRatio="xMidYMid meet"></svg>
+    </div>
+    <div class="sep"></div>
+    <div class="svg-box bot-box">
+      <!-- viewBox height increased to 338 to give badge room below fraction labels -->
+      <svg id="botsvg" viewBox="0 0 460 338" preserveAspectRatio="xMidYMid meet"></svg>
+    </div>
+  </div>
 
-<div class="controls">
-
-  <div class="ctrl-panel">
-    <div class="ctrl-label" data-i18n="tempo">Tempo</div>
-    <div class="bpm-row">
-      <div style="display:flex;align-items:baseline;gap:4px;">
-        <input type="number" id="bpm-val" min="30" max="240" value="80"
-               inputmode="numeric" pattern="[0-9]*"
-               style="font-family:'Cormorant Garamond',serif;font-size:38px;font-weight:600;
-                      color:var(--gold);width:72px;background:transparent;border:none;
-                      border-bottom:1px solid rgba(232,160,48,0.3);outline:none;
-                      text-align:right;line-height:1;padding:0;-moz-appearance:textfield;"
-               onfocus="this.select()"
-        >
-        <div class="bpm-unit">BPM</div>
+  <div class="ctrl">
+    <div class="sgroup">
+      <div class="srow">
+        <span class="slbl">Cut angle</span>
+        <input type="range" id="sl-cut" min="0" max="100" value="0" step="1">
+        <span class="sval orange" id="v-cut">0°</span>
       </div>
-      <input type="range" id="sl-bpm" min="30" max="240" value="80" step="1">
     </div>
-    <div class="tempo-name" id="tempo-name">Andante</div>
-    <div class="speed-notice" id="speed-notice"></div>
-  </div>
-
-  <button class="tap-btn" id="tap-btn" onclick="tapTempo()" data-i18n="tapBtn">Tap <em>HERE</em> to Set Tempo</button>
-
-  <div class="ctrl-panel">
-    <div class="ctrl-label" style="color:var(--blue)" data-i18n="timeSig">Time Signature</div>
-    <div class="pill-row" id="tsig-row">
-      <button class="pill active" data-beats="4">4/4</button>
-      <button class="pill" data-beats="3">3/4</button>
-      <button class="pill" data-beats="2">2/4</button>
-      <button class="pill" data-beats="6">6/8</button>
-      <button class="pill" data-beats="5">5/4</button>
-      <button class="pill" data-beats="7">7/8</button>
+    <div class="readout">
+      <div class="ri"><div class="ri-lbl">Aim point</div><div class="ri-val orange" id="r-aim">0%</div></div>
+      <div class="ri"><div class="ri-lbl">Ball fraction</div><div class="ri-val green" id="r-frc">full ball</div></div>
+      <div class="ri"><div class="ri-lbl">Cut angle</div><div class="ri-val yellow" id="r-ang">0°</div></div>
     </div>
-  </div>
-
-  <div class="ctrl-panel">
-    <div class="ctrl-label" style="color:var(--pink)" data-i18n="subdiv">Subdivision</div>
-    <div class="pill-row" id="subdiv-row">
-      <button class="pill sm active" data-subdiv="none" data-i18n="beatOnly">Beat only</button>
-      <button class="pill sm" data-subdiv="eighth" data-i18n="eighths">· and ·</button>
-      <button class="pill sm" data-subdiv="sixteenth" data-i18n="sixteenths">e · and · a</button>
+    <div class="comp-row" style="margin-bottom:6px;">
+      Adjustment: <span class="comp-val" id="r-throw" style="color:#fff">none</span>
     </div>
-  </div>
-
-  <div class="ctrl-panel">
-    <div class="ctrl-label" style="color:var(--orange)" data-i18n="countStyle">Count Style</div>
-    <div class="pill-row" id="style-row">
-      <button class="pill sm active" data-style="numbers" id="btn-all-beats" data-i18n="allBeats">All beats</button>
-      <button class="pill sm" data-style="one-only" data-i18n="oneOnly">One only</button>
-      <button class="pill sm" data-style="silent" data-i18n="silent">Silent</button>
+    <div class="sgroup">
+      <div class="sgroup-title">Speed — affects how much throw occurs
+        <button id="speed-toggle" onclick="toggleSpeed()" style="float:right;margin-top:-2px;padding:2px 10px;border-radius:10px;border:none;font-family:'Lato',sans-serif;font-size:9px;font-weight:900;letter-spacing:0.08em;cursor:pointer;background:#3a7a3a;color:#fff;">ON</button>
+      </div>
+      <div class="srow" id="speed-row">
+        <span class="slbl">Speed</span>
+        <span style="font-size:10px;color:#70c0f0;font-weight:700;min-width:28px;text-align:right">slow</span>
+        <input type="range" id="sl-speed" min="0" max="100" value="50" step="1">
+        <span style="font-size:10px;color:#70c0f0;font-weight:700;min-width:28px;text-align:left">fast</span>
+      </div>
     </div>
-  </div>
-
-  <div class="ctrl-panel">
-    <div class="ctrl-label" style="color:var(--green-hi)" data-i18n="clickTone">Click Tone</div>
-    <div class="pill-row" id="tone-row">
-      <button class="pill sm active" data-tone="wood" data-i18n="wood">Wood</button>
-      <button class="pill sm" data-tone="bell" data-i18n="bell">Bell</button>
-      <button class="pill sm" data-tone="beep" data-i18n="beep">Beep</button>
-      <button class="pill sm" data-tone="rim" data-i18n="rim">Rim</button>
-      <button class="pill sm" data-tone="soft" data-i18n="soft">Soft</button>
+    <div class="sgroup">
+      <div class="sgroup-title">Spin — where the tip hits the cue ball &nbsp;·&nbsp; ← inside &nbsp;|&nbsp; outside →
+        <button id="spin-toggle" onclick="toggleSpin()" style="float:right;margin-top:-2px;padding:2px 10px;border-radius:10px;border:none;font-family:'Lato',sans-serif;font-size:9px;font-weight:900;letter-spacing:0.08em;cursor:pointer;background:#3a7a3a;color:#fff;">ON</button>
+      </div>
+      <div class="srow" id="spin-row">
+        <span class="slbl">Spin</span>
+        <input type="range" id="sl-spin" min="0" max="100" value="50" step="1">
+        <span class="sval pink" id="v-spin">center</span>
+      </div>
+    </div>
+    <div class="sgroup">
+      <div class="sgroup-title">Distance — squirt from spin grows with distance to object ball
+        <button id="dist-toggle" onclick="toggleDist()" style="float:right;margin-top:-2px;padding:2px 10px;border-radius:10px;border:none;font-family:'Lato',sans-serif;font-size:9px;font-weight:900;letter-spacing:0.08em;cursor:pointer;background:#3a7a3a;color:#fff;">ON</button>
+      </div>
+      <div class="srow" id="dist-row">
+        <span class="slbl">Distance</span>
+        <span style="font-size:10px;color:rgba(255,255,255,0.6);font-weight:700;min-width:28px;text-align:right">near</span>
+        <input type="range" id="sl-dist" min="0" max="100" value="25" step="1">
+        <span id="dist-far-lbl" style="font-size:10px;color:rgba(255,255,255,0.6);font-weight:700;min-width:28px;text-align:left">far</span>
+        <span class="sval" id="v-dist" style="color:rgba(255,255,255,0.7)">2 ft</span>
+      </div>
     </div>
   </div>
-
-  <div class="ctrl-panel">
-    <div class="ctrl-label" style="color:var(--gold)" data-i18n="language">Language</div>
-    <select id="lang-select" class="voice-sel"></select>
-  </div>
-
-  <div class="ctrl-panel">
-    <div class="ctrl-label" style="color:var(--gold)" data-i18n="voice">Voice</div>
-    <div class="pill-row" id="voice-gender-row">
-      <button class="pill sm active" data-gender="female" data-i18n="female">♀ Female</button>
-      <button class="pill sm" data-gender="male" data-i18n="male">♂ Male</button>
-    </div>
-    <select class="voice-sel" id="voice-select" style="margin-top:8px"></select>
-  </div>
-
-  <div class="ctrl-panel">
-    <div class="ctrl-label" style="color:var(--white-mid)" data-i18n="screenFlash">Screen Flash</div>
-    <div class="toggle-row">
-      <span class="toggle-label" data-i18n="flashLabel">Flash on each beat</span>
-      <label class="toggle">
-        <input type="checkbox" id="flash-toggle">
-        <span class="toggle-track"></span>
-      </label>
+    <div class="sgroup">
+      <div class="sgroup-title">Personal Bias — compensate for your tendency to undercut or overcut
+        <button id="bias-toggle" onclick="toggleBias()" style="float:right;margin-top:-2px;padding:2px 10px;border-radius:10px;border:none;font-family:'Lato',sans-serif;font-size:9px;font-weight:900;letter-spacing:0.08em;cursor:pointer;background:#3a7a3a;color:#fff;">ON</button>
+      </div>
+      <div class="srow" id="bias-row">
+        <span class="slbl">Bias</span>
+        <span style="font-size:10px;color:rgba(255,255,255,0.6);font-weight:700;min-width:28px;text-align:right">fuller</span>
+        <input type="range" id="sl-bias" min="-12" max="12" value="0" step="1">
+        <span style="font-size:10px;color:rgba(255,255,255,0.6);font-weight:700;min-width:28px;text-align:left">thinner</span>
+        <span class="sval" id="v-bias" style="color:#fff;">none</span>
+      </div>
     </div>
   </div>
-
-<button id="go-btn" onclick="toggleFS()">GO!</button>
-
 </div>
 
 <script>
-const SPEED_LIMIT = 120; // above this BPM, all-beats voice is disabled
+const DEG=180/Math.PI, RAD=Math.PI/180;
+const Rt=42, Rb=82;
+const TOP_OCX=210, BOT_OCX=148;
 
-let bpm=80, beatsPerBar=4, running=false;
-let audioCtx=null, nextBeatTime=0;
-let schedulerTimer=null, drawTimer=null, beatQueue=[];
-let selectedVoice=null, voiceStyle='numbers', subdivision='none', clickTone='wood';
-let currentBeatPos=1, tapTimes=[], flashEnabled=false;
+const speedFactor=[0,0.95,0.72,0.45,0.22,0.08];
+const speedLabels=['','slow','med-slow','medium','med-fast','fast'];
+const spinLabels={
+  '-4':'2 tips inside','-3':'1½ tips inside','-2':'1 tip inside','-1':'½ tip inside',
+  '0':'center','1':'½ tip outside','2':'1 tip outside','3':'1½ tips outside','4':'2 tips outside'
+};
 
-// beatWord() defined below uses countLang
-const subdivWords={eighth:['','and'],sixteenth:['','e','and','a']};
-
-function tempoName(b){
-  if(b<40)return'Grave';if(b<60)return'Largo';if(b<66)return'Larghetto';
-  if(b<76)return'Adagio';if(b<108)return'Andante';if(b<120)return'Moderato';
-  if(b<156)return'Allegro';if(b<176)return'Vivace';if(b<200)return'Presto';
-  return'Prestissimo';
+function fracStr(hf){
+  if(hf<0.005)   return 'full ball';
+  if(hf<0.125)   return '⅛ ball';
+  if(hf<0.250)   return '¼ ball';
+  if(hf<0.375)   return '⅜ ball';
+  if(hf<0.500)   return '½ ball';
+  if(hf<0.625)   return '⅝ ball';
+  if(hf<0.750)   return '¾ ball';
+  if(hf<0.875)   return '⅞ ball';
+  if(hf<0.9375)  return '15/16 ball';
+  if(hf<0.9999)  return 'thin cut';
+  return 'miss';
 }
 
-// Returns the effective voice style — at high speed, all-beats → one-only
-function effectiveVoiceStyle(){
-  if(voiceStyle==='numbers' && bpm>SPEED_LIMIT) return 'one-only';
-  return voiceStyle;
+function compute(){
+  var cutRaw=parseInt(document.getElementById('sl-cut').value)/100;
+  // Map 0-100 → speed level 1-5
+  var speedRaw=parseInt(document.getElementById('sl-speed').value);
+  var speed = (window.speedEnabled!==false) ? Math.min(5,Math.floor(speedRaw/100*5)+1) : 3; // 3=medium when off
+  var spinRaw=parseInt(document.getElementById('sl-spin').value);
+  var spin = (window.spinEnabled!==false) ? Math.round((spinRaw/100)*8)-4 : 0;
+  // Map 0-100 → 0.5 to 9 feet
+  var distRaw=parseInt(document.getElementById('sl-dist').value);
+  var distFt=0.5+(distRaw/100)*(window.snooker?13.5:8.5);
+  var distIn=distFt*12;
+  var distEnabled=window.distEnabled!==false;
+  var biasRaw=parseInt(document.getElementById('sl-bias').value);
+  var biasDeg=(window.biasEnabled!==false) ? biasRaw : 0;
+  var biasRad=biasDeg*RAD;
+
+  var Z_des = cutRaw >= 1.0 ? Math.PI/2 : Math.asin(cutRaw);
+  var cutThrow=Math.atan(0.015*Math.cos(Z_des));
+  var spinThrow=spin*1.2*RAD;
+  var sf=speedFactor[speed];
+  var Z_aim = cutRaw < 0.005 ? 0 : cutRaw >= 1.0 ? Math.PI/2 : Math.max(0,Math.min(Z_des+(cutThrow+spinThrow)*sf+biasRad, Math.PI/2));
+
+  // Squirt: realistic 0.5° per tip, capped at 5ft effective distance (beyond that
+  // you're compensating by feel anyway), and capped at ±25% of a ball width.
+  // Also fade out squirt as cut angle increases past 60° — at steep angles
+  // squirt math breaks down and the shot geometry dominates.
+  var squirtAngle = spin * 0.5 * RAD;
+  var effectiveDist = distEnabled ? Math.min(distIn, 60) : 0;
+  var squirtDrift = effectiveDist * Math.tan(squirtAngle);
+  var squirtRaw = squirtDrift / 2.25;
+  // Fade squirt to zero as cut angle climbs past 55% of slider (≈33°) toward 85%
+  var squirtFade = cutRaw < 0.005 ? 0 : Math.max(0, Math.min(1, 1 - (cutRaw - 0.55) / 0.30));
+  var squirtFraction = Math.max(-0.25, Math.min(0.25, squirtRaw * squirtFade));
+
+  // At near-90° the shot is a miss regardless — suppress compensation math
+  var atExtreme = cutRaw > 0.97;
+  var geoFrac = Math.sin(Z_des);
+  var aimFraction = atExtreme ? geoFrac : Math.max(0, Math.min(1, Math.sin(Z_aim) - squirtFraction));
+
+  return { Z_des, Z_aim,
+    geoFrac,
+    aimFraction,
+    spin, speed, distFt,
+    squirtFraction: atExtreme ? 0 : squirtFraction,
+    throwDiff: atExtreme ? 0 : Math.round(Math.sin(Z_aim)*100) - Math.round(geoFrac*100)
+  };
 }
 
-function updateSpeedNotice(){
-  const notice=document.getElementById('speed-notice');
-  const allBtn=document.getElementById('btn-all-beats');
-  if(bpm>SPEED_LIMIT){
-    notice.textContent=(T[uiLang]||T.en).speedWarn(SPEED_LIMIT);
-    allBtn.classList.add('disabled');
-  }else{
-    notice.textContent='';
-    allBtn.classList.remove('disabled');
+function clipToBox(ox,oy,tx,ty,W,H,m){
+  var dx=tx-ox, dy=ty-oy;
+  if(!dx&&!dy) return [tx,ty];
+  var t=1;
+  if(dx<0) t=Math.min(t,(m-ox)/dx);
+  else if(dx>0) t=Math.min(t,(W-m-ox)/dx);
+  if(dy<0) t=Math.min(t,(m-oy)/dy);
+  else if(dy>0) t=Math.min(t,(H-m-oy)/dy);
+  t=Math.max(0,Math.min(1,t));
+  return [ox+t*dx, oy+t*dy];
+}
+
+// ── TOP VIEW ─────────────────────────────────────────────────
+function drawTop(d){
+  var W=460, H=210, r=Rt;
+  var sinA=Math.sin(d.Z_des), cosA=Math.cos(d.Z_des);
+  var ocx=TOP_OCX, ocy=72+sinA*22;
+  var ccx=ocx+sinA*2*r, ccy=ocy+cosA*2*r;
+  var ux=-sinA, uy=-cosA;
+  var tail=[ccx-ux*50, ccy-uy*50];
+  var head=clipToBox(ocx,ocy, ocx+ux*130, ocy+uy*130, W,H,6);
+  var arcR=34, Zdeg=Math.round(d.Z_des*DEG);
+
+  var out='';
+  // Faint vertical reference
+  out+='<line x1="'+ocx+'" y1="6" x2="'+ocx+'" y2="'+(H-6)+'" stroke="rgba(255,255,255,0.07)" stroke-width="1.2" stroke-dasharray="3,5"/>';
+  // Arrow
+  out+='<line x1="'+tail[0]+'" y1="'+tail[1]+'" x2="'+head[0]+'" y2="'+head[1]+'" stroke="rgba(255,255,255,0.92)" stroke-width="2.6" marker-end="url(#Tarr)"/>';
+  // Arc + angle label
+  if(sinA>0.025){
+    var arcEndX=ocx+ux*arcR, arcEndY=ocy+uy*arcR;
+    out+='<path d="M'+ocx+','+(ocy-arcR)+' A'+arcR+','+arcR+' 0 0,0 '+arcEndX+','+arcEndY+'" fill="none" stroke="#e87030" stroke-width="2"/>';
+    out+='<text x="'+(ocx+ux*arcR*0.52-18)+'" y="'+(ocy+uy*arcR*0.52-4)+'" font-family="Lato,sans-serif" font-size="13" font-weight="900" fill="#e87030">'+Zdeg+'°</text>';
   }
+  // Cue ball first (underneath), then red ball on top
+  out+='<circle cx="'+ccx+'" cy="'+ccy+'" r="'+r+'" fill="url(#CGT)" stroke="#aaa" stroke-width="1.2"/>';
+  out+='<circle cx="'+ocx+'" cy="'+ocy+'" r="'+r+'" fill="url(#OGT)" stroke="#7a1010" stroke-width="1.2"/>';
+
+  // Orange cut angle badge — bottom-left, mirrors % badge position in bottom view
+  var badgeX=44, badgeY=H-14;
+  out+='<rect x="'+(badgeX-40)+'" y="'+(badgeY-26)+'" width="80" height="34" rx="7" fill="#e87030"/>';
+  out+='<text x="'+badgeX+'" y="'+(badgeY-4)+'" text-anchor="middle" font-family="Lato,sans-serif" font-size="18" font-weight="900" fill="white">'+Zdeg+'°</text>';
+
+  out+='<text x="'+(W-8)+'" y="'+(H-8)+'" text-anchor="end" font-family="Lato,sans-serif" font-size="8" font-weight="700" letter-spacing="0.12em" fill="rgba(255,255,255,0.25)">BIRD\'S EYE</text>';
+
+  document.getElementById('topsvg').innerHTML=out;
 }
 
-function buildPips(){
-  const el=document.getElementById('pips'); el.innerHTML='';
-  for(let i=1;i<=beatsPerBar;i++){
-    const d=document.createElement('div');
-    d.className='pip'+(i===1?' one':''); d.id='pip-'+i; el.appendChild(d);
-  }
-}
+// ── BOTTOM VIEW ───────────────────────────────────────────────
+// viewBox height = 338. ocy=155. Ball bottom = 237.
+// Fraction labels at ocy+r+22 = 259.
+// Badge at ocy+r+38 = 275 to 275+34 = 309. Comfortably below labels.
+// EYE LEVEL at 330. All fits inside 338.
+function drawBot(d){
+  var W=460, H=338, r=Rb;
+  var rh=window.rightHand===true;
+  // For right-hand: cue ball is to the LEFT of object ball
+  // Mirror object ball to right side of viewBox
+  var ocx=rh?(W-BOT_OCX):BOT_OCX, ocy=155;
+  var aimF=d.aimFraction;
+  var ccx=rh ? ocx-aimF*2*r : ocx+aimF*2*r;
+  var edgeX=rh ? ccx+r : ccx-r;
+  var revealW=rh ? Math.max(0,(ocx+r)-edgeX) : Math.max(0,edgeX-(ocx-r));
+  var laX1=ocx-r-22, laX2=ocx+r+22;
+  var aimP=Math.round(aimF*100);
 
-// BPM input field — type a value directly
-document.getElementById('bpm-val').addEventListener('change', function(){
-  let v = parseInt(this.value);
-  if(isNaN(v)) v = bpm;
-  v = Math.max(30, Math.min(240, v));
-  bpm = v;
-  this.value = v;
-  document.getElementById('sl-bpm').value = v;
-  document.getElementById('tempo-name').textContent = tempoName(v);
-  updateSpeedNotice();
-  if(running) nextBeatTime = audioCtx.currentTime + 0.05;
-});
-// Also update live while typing
-document.getElementById('bpm-val').addEventListener('input', function(){
-  let v = parseInt(this.value);
-  if(!isNaN(v) && v >= 30 && v <= 240){
-    bpm = v;
-    document.getElementById('sl-bpm').value = v;
-    document.getElementById('tempo-name').textContent = tempoName(v);
-    updateSpeedNotice();
-    if(running) nextBeatTime = audioCtx.currentTime + 0.05;
-  }
-});
-// Dismiss keyboard on Enter
-document.getElementById('bpm-val').addEventListener('keydown', function(e){
-  if(e.key === 'Enter'){ this.blur(); }
-  // Prevent spacebar from toggling metronome while editing
-  if(e.key === ' '){ e.stopPropagation(); }
-});
-
-function tapTempo(){
-  const now=Date.now();
-  tapTimes=tapTimes.filter(t=>now-t<3000); tapTimes.push(now);
-  if(tapTimes.length<2)return;
-  const avg=tapTimes.slice(1).reduce((s,t,i)=>s+(t-tapTimes[i]),0)/(tapTimes.length-1);
-  bpm=Math.max(30,Math.min(240,Math.round(60000/avg)));
-  document.getElementById('sl-bpm').value=bpm;
-  document.getElementById('bpm-val').value=bpm;
-  document.getElementById('tempo-name').textContent=tempoName(bpm);
-  updateSpeedNotice();
-  const btn=document.getElementById('tap-btn');
-  btn.style.background='rgba(232,160,48,0.25)'; btn.style.color='var(--gold)';
-  setTimeout(()=>{btn.style.background=''; btn.style.color='';},100);
-}
-
-
-function playClick(time, vol, rate){
-  const t = Math.max(time, audioCtx.currentTime + 0.005);
-  const ac = rate > 0.95; // accent (beat 1)
-
-  function osc(type, freq, freqEnd, gainStart, gainEnd, dur){
-    const o = audioCtx.createOscillator();
-    const g = audioCtx.createGain();
-    o.type = type;
-    o.frequency.setValueAtTime(freq, t);
-    if(freqEnd) o.frequency.exponentialRampToValueAtTime(freqEnd, t + dur);
-    g.gain.setValueAtTime(gainStart * vol, t);
-    g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-    o.connect(g); g.connect(audioCtx.destination);
-    o.start(t); o.stop(t + dur + 0.005);
+  // Sixteenth ticks
+  var ticks='';
+  for(var i=0;i<=16;i++){
+    var tx=(ocx-r)+(i/16)*(2*r);
+    var big=(i===0||i===8||i===16), med=(i===4||i===12);
+    var th=big?17:med?12:5, sw=big?2.2:med?1.5:0.8, op=big?1.0:med?0.65:0.32;
+    ticks+='<line x1="'+tx+'" y1="'+(ocy-th)+'" x2="'+tx+'" y2="'+(ocy+th)+'" stroke="#7fd0f0" stroke-width="'+sw+'" opacity="'+op+'"/>';
+    if(i===0)  ticks+='<text x="'+tx+'" y="'+(ocy-r-22)+'" text-anchor="middle" font-family="Lato,sans-serif" font-size="11" font-weight="700" fill="#b0e8ff">0%</text>';
+    if(i===8)  ticks+='<text x="'+tx+'" y="'+(ocy-r-22)+'" text-anchor="middle" font-family="Lato,sans-serif" font-size="11" font-weight="700" fill="#b0e8ff">50%</text>';
+    if(i===16) ticks+='<text x="'+tx+'" y="'+(ocy-r-22)+'" text-anchor="middle" font-family="Lato,sans-serif" font-size="11" font-weight="700" fill="#b0e8ff">100%</text>';
+    var fr=['','','⅛','','¼','','⅜','','','','⅝','','¾','','⅞','',''][i];
+    if(fr) ticks+='<text x="'+tx+'" y="'+(ocy+r+22)+'" text-anchor="middle" font-family="Lato,sans-serif" font-size="10" fill="rgba(255,255,255,0.55)">'+fr+'</text>';
   }
 
-  if(clickTone === 'wood'){
-    // Sharp crack + body
-    osc('triangle', ac?2200:1300, ac?660:390, 1.0,   0.001, 0.015);
-    osc('sine',     ac?480:280,  ac?120:80,  0.7,   0.001, 0.04);
-  } else if(clickTone === 'bell'){
-    // Bell: pure sine with long ring, inharmonic overtone
-    osc('sine', ac?1760:1108, null, 0.9, 0.001, ac?0.35:0.25);
-    osc('sine', ac?2794:1760, null, 0.4, 0.001, ac?0.18:0.12);
-    osc('sine', ac?4186:2637, null, 0.2, 0.001, ac?0.08:0.06);
-  } else if(clickTone === 'beep'){
-    // Clean pitched beep — classic metronome
-    osc('sine', ac?880:554, null, 0.9, 0.001, ac?0.08:0.06);
-  } else if(clickTone === 'rim'){
-    // Rimshot: high snap + short ring
-    osc('square',   ac?4000:2400, ac?800:500, 0.5, 0.001, 0.008);
-    osc('triangle', ac?900:560,   ac?300:180, 0.6, 0.001, 0.025);
-    osc('sine',     ac?220:140,   ac?80:55,   0.4, 0.001, 0.035);
-  } else if(clickTone === 'soft'){
-    // Gentle muted thud
-    osc('sine', ac?320:200, ac?80:55, 0.8, 0.001, 0.055);
-    osc('sine', ac?160:100, ac?60:40, 0.4, 0.001, 0.07);
-  }
-}
+  var out='';
+  // clipPath must stay in local defs since it uses a dynamic rect
+  var clipX=rh?edgeX:(ocx-r);
+  out+='<defs><clipPath id="revClip"><rect x="'+clipX+'" y="'+(ocy-r)+'" width="'+revealW+'" height="'+(2*r)+'"/></clipPath></defs>';
 
-function scheduleClick(time, isOne, subLevel){
-  // subLevel: 0=beat, 1=and (8th), 2=e or a (16th)
-  // Clicks always play — voice style only affects speakBeat
-  if(subLevel>0 && subdivision==='none') return;
-  if(subLevel===0){
-    // Beat 1: full vol, natural pitch. Other beats: softer, slightly lower.
-    playClick(time, isOne ? 1.0 : 0.60, isOne ? 1.0 : 0.85);
-  }else if(subLevel===1){
-    playClick(time, 0.30, 0.75);   // "and"
-  }else{
-    playClick(time, 0.14, 0.68);   // "e" or "a"
-  }
-}
+  // Object ball
+  out+='<circle cx="'+ocx+'" cy="'+ocy+'" r="'+r+'" fill="url(#OGdB)" stroke="#2a0606" stroke-width="1.5"/>';
+  out+='<circle cx="'+ocx+'" cy="'+ocy+'" r="'+r+'" fill="url(#OGB)" stroke="none" clip-path="url(#revClip)"/>';
+  out+='<circle cx="'+ocx+'" cy="'+ocy+'" r="'+r+'" fill="none" stroke="#8a1818" stroke-width="1.5" clip-path="url(#revClip)"/>';
 
-function speakBeat(beat){
-  const style=effectiveVoiceStyle();
-  if(style==='silent') return;
-  if(style==='one-only' && beat!==1) return;
-  window.speechSynthesis.cancel();
-  const u=new SpeechSynthesisUtterance(beatWord(beat));
-  u.rate=Math.max(0.85,Math.min(1.8,bpm/72)); u.pitch=beat===1?1.1:0.95; u.volume=1;
-  if(selectedVoice){
-    u.voice = selectedVoice;
-    u.lang  = selectedVoice.lang; // force utterance language to match voice
+  // Line A + ticks
+  out+='<line x1="'+laX1+'" y1="'+ocy+'" x2="'+laX2+'" y2="'+ocy+'" stroke="#7fd0f0" stroke-width="3" stroke-linecap="round"/>';
+  out+='<text x="'+(laX1-8)+'" y="'+(ocy+5)+'" text-anchor="end" font-family="Lato,sans-serif" font-size="15" font-weight="900" fill="#b0e8ff">A</text>';
+  out+=ticks;
+
+  // Cue ball + tip
+  out+='<circle cx="'+ccx+'" cy="'+ocy+'" r="'+r+'" fill="url(#CGB)" stroke="#aaa" stroke-width="1.5"/>';
+  out+='<line x1="'+(ccx-r*0.74)+'" y1="'+ocy+'" x2="'+(ccx+r*0.74)+'" y2="'+ocy+'" stroke="rgba(0,0,0,0.13)" stroke-width="1.2"/>';
+  out+='<line x1="'+ccx+'" y1="'+(ocy-r*0.74)+'" x2="'+ccx+'" y2="'+(ocy+r*0.74)+'" stroke="rgba(0,0,0,0.13)" stroke-width="1.2"/>';
+  var tipX=ccx+(d.spin/4)*0.62*r;
+  out+='<circle cx="'+tipX+'" cy="'+ocy+'" r="'+(r*0.10)+'" fill="#000" opacity="0.85"/>';
+
+  var showMarker=rh ? edgeX<ocx+r-3 : edgeX>ocx-r+3;
+  if(showMarker){
+    out+='<line x1="'+edgeX+'" y1="'+(ocy-r+6)+'" x2="'+edgeX+'" y2="'+(ocy+r-6)+'" stroke="#e87030" stroke-width="4" stroke-linecap="round" stroke-dasharray="6,4"/>';
+    var lblX=Math.max(72, Math.min(edgeX, W-76));
+    out+='<text x="'+lblX+'" y="'+(ocy-r-8)+'" text-anchor="middle" font-family="Lato,sans-serif" font-size="11" font-weight="700" fill="#ffb080">inside edge</text>';
+    var bx=Math.max(44, Math.min(edgeX, W-44));
+    out+='<rect x="'+(bx-40)+'" y="'+(ocy+r+38)+'" width="80" height="34" rx="7" fill="#e87030"/>';
+    out+='<text x="'+bx+'" y="'+(ocy+r+60)+'" text-anchor="middle" font-family="Lato,sans-serif" font-size="18" font-weight="900" fill="white">'+aimP+'%</text>';
   } else {
-    u.lang = countLang; // fallback
+    var hintX=rh?(ocx-r-80):(ocx+r+80);
+    out+='<text x="'+hintX+'" y="'+(ocy+5)+'" text-anchor="middle" font-family="Lato,sans-serif" font-size="12" fill="rgba(255,255,255,0.4)">drag cut angle → to begin</text>';
   }
-  window.speechSynthesis.speak(u);
+
+  out+='<text x="'+(W-8)+'" y="'+(H-8)+'" text-anchor="end" font-family="Lato,sans-serif" font-size="8" font-weight="700" letter-spacing="0.12em" fill="rgba(255,255,255,0.25)">EYE LEVEL</text>';
+  document.getElementById('botsvg').innerHTML=out;
 }
 
-function flashScreen(isOne){
-  if(!flashEnabled) return;
-  const el=document.getElementById('flash-overlay');
-  el.style.opacity=isOne?'0.35':'0.15';
-  setTimeout(()=>{el.style.opacity='0';},80);
-}
-
-function flashBeat(beat){
-  const numEl=document.getElementById('beat-num');
-  const wordEl=document.getElementById('beat-word');
-  const isOne=beat===1;
-  numEl.textContent=beat;
-  wordEl.textContent=''; // digits shown in beat-num; no word needed
-  numEl.classList.remove('pulse','one-pulse'); wordEl.classList.remove('flash');
-  void numEl.offsetWidth;
-  numEl.classList.add(isOne?'one-pulse':'pulse'); wordEl.classList.add('flash');
-  flashScreen(isOne);
-  document.querySelectorAll('.pip').forEach(p=>p.classList.remove('active'));
-  const pip=document.getElementById('pip-'+beat); if(pip)pip.classList.add('active');
-  setTimeout(()=>{
-    numEl.classList.remove('pulse','one-pulse'); wordEl.classList.remove('flash');
-  }, Math.min(180,(60000/bpm)*0.35));
-}
-
-function getSubdivCount(){
-  if(subdivision==='eighth')return 2; if(subdivision==='sixteenth')return 4; return 1;
-}
-
-function scheduler(){
-  if(!running)return;
-  const subdivCount=getSubdivCount();
-  const beatDur=60.0/bpm;
-  const subDur=beatDur/subdivCount;
-  while(nextBeatTime<audioCtx.currentTime+0.15){
-    const beat=currentBeatPos;
-    scheduleClick(nextBeatTime,beat===1,0);
-    beatQueue.push({beat,time:nextBeatTime});
-    // Subdivision pops — audio only, no queue entry
-    for(let s=1;s<subdivCount;s++){
-      const st=nextBeatTime+s*subDur;
-      // s=1 in 8th = "and"; in 16th: s=1="e", s=2="and", s=3="a"
-      const level=(subdivision==='sixteenth'&&s===2)?1 : (subdivision==='eighth'&&s===1)?1 : 2;
-      scheduleClick(st,false,level);
+function update(){
+  var d=compute();
+  drawTop(d); drawBot(d);
+  var Zdeg=Math.round(d.Z_des*DEG);
+  var aimP=Math.round(d.aimFraction*100);
+  var diff=aimP-Math.round(d.geoFrac*100);
+  document.getElementById('v-cut').textContent    = Zdeg+'°';
+  document.getElementById('v-spin').textContent   = spinLabels[String(d.spin)];
+  document.getElementById('r-aim').textContent    = aimP+'%';
+  document.getElementById('r-frc').textContent    = fracStr(d.aimFraction);
+  document.getElementById('r-ang').textContent    = Zdeg+'°';
+  // Distance display
+  var ft=d.distFt, ftStr=ft<1?(Math.round(ft*12)+'"'):(Math.round(ft*10)/10)+' ft';
+  document.getElementById('v-dist').textContent = ftStr;
+  var biasVal=parseInt(document.getElementById('sl-bias').value);
+  document.getElementById('v-bias').textContent = biasVal===0?'none':(biasVal>0?'+':'')+biasVal+'°';
+  // Combined adjustment: throw + squirt
+  var throwEl=document.getElementById('r-throw');
+  var td=d.throwDiff, sq=Math.round(d.squirtFraction*100);
+  if(Math.abs(td)<1 && Math.abs(sq)<1){
+    throwEl.textContent='none'; throwEl.style.color='#fff';
+  } else {
+    var parts=[];
+    if(Math.abs(td)>=1){
+      var throwDir = td>0 ? 'aim thinner' : 'aim fuller';
+      parts.push('throw: '+throwDir+' '+(td>0?'+':'')+td+'%');
     }
-    nextBeatTime+=beatDur;
-    currentBeatPos++;
-    if(currentBeatPos>beatsPerBar)currentBeatPos=1;
-  }
-  schedulerTimer=setTimeout(scheduler,25);
-}
-
-function drawLoop(){
-  const now=audioCtx?audioCtx.currentTime:0;
-  while(beatQueue.length && beatQueue[0].time<=now+0.015){
-    const ev=beatQueue.shift();
-    flashBeat(ev.beat);
-    speakBeat(ev.beat);
-  }
-  drawTimer=requestAnimationFrame(drawLoop);
-}
-
-function toggleFS(){
-  const btn = document.getElementById('fs-btn');
-  if(document.body.classList.toggle('fs-mode')){
-    btn.textContent = '✕';
-    btn.title = 'Exit full screen';
-  } else {
-    btn.textContent = '⛶';
-    btn.title = 'Full screen';
+    if(Math.abs(sq)>=1){
+      // squirtFraction>0 means aim point is reduced (thinner); <0 means fuller
+      var squirtDir = sq>0 ? 'aim fuller' : 'aim thinner';
+      parts.push('squirt: '+squirtDir+' '+Math.abs(sq)+'%');
+    }
+    throwEl.textContent=parts.join('  ·  ');
+    throwEl.style.color='#e8a050';
   }
 }
 
-function showErr(e){
-  const b=document.getElementById('err-banner');
-  b.textContent='Error: '+String(e);
-  b.style.display='block';
-  console.error(e);
+document.getElementById('sl-cut').addEventListener('input',update);
+document.getElementById('sl-speed').addEventListener('input',update);
+document.getElementById('sl-spin').addEventListener('input',update);
+document.getElementById('sl-dist').addEventListener('input',update);
+
+window.distEnabled  = true;
+window.speedEnabled = true;
+window.spinEnabled  = true;
+window.biasEnabled  = true;
+
+function setToggle(id, rowId, enabled){
+  var btn=document.getElementById(id);
+  var row=document.getElementById(rowId);
+  if(enabled){ btn.textContent='ON'; btn.style.background='#3a7a3a'; row.style.opacity='1'; row.style.pointerEvents='auto'; }
+  else        { btn.textContent='OFF'; btn.style.background='#555';  row.style.opacity='0.35'; row.style.pointerEvents='none'; }
 }
-window.onerror=function(msg,src,line,col,err){ showErr(msg+' (line '+line+')'); };
-function toggleMetronome(){
-  try{ running?stopMetronome():startMetronome(); }
-  catch(e){ showErr(e); }
+function toggleSpeed(){ window.speedEnabled=!window.speedEnabled; setToggle('speed-toggle','speed-row',window.speedEnabled); update(); }
+function toggleSpin(){  window.spinEnabled =!window.spinEnabled;  setToggle('spin-toggle', 'spin-row', window.spinEnabled);  update(); }
+function toggleDist(){  window.distEnabled =!window.distEnabled;  setToggle('dist-toggle', 'dist-row', window.distEnabled);  update(); }
+function toggleBias(){  window.biasEnabled =!window.biasEnabled;  setToggle('bias-toggle','bias-row',window.biasEnabled);  update(); }
+function toggleHand(){
+  window.rightHand = !window.rightHand;
+  var btn=document.getElementById('hand-btn');
+  btn.textContent = window.rightHand ? 'RIGHT ▶' : '◀ LEFT';
+  btn.style.borderColor = window.rightHand ? 'rgba(112,192,240,0.6)' : 'rgba(240,223,112,0.5)';
+  btn.style.color = window.rightHand ? '#70c0f0' : '#f0df70';
+  // Flip spin labels: inside/outside swap sides with the shot
+  var spinTitle = document.querySelector('#spin-row').previousElementSibling;
+  var sBg=window.spinEnabled?'#3a7a3a':'#555';
+  var sState=window.spinEnabled?'ON':'OFF';
+  var sBtnStyle='float:right;margin-top:-2px;padding:2px 10px;border-radius:10px;border:none;font-family:Lato,sans-serif;font-size:9px;font-weight:900;letter-spacing:0.08em;cursor:pointer;background:'+sBg+';color:#fff;';
+  var sBtn='<button id="spin-toggle" onclick="toggleSpin()" style="'+sBtnStyle+'">'+sState+'</button>';
+  spinTitle.innerHTML = window.rightHand
+    ? 'Spin — where the tip hits the cue ball &nbsp;·&nbsp; ← outside &nbsp;|&nbsp; inside → ' + sBtn
+    : 'Spin — where the tip hits the cue ball &nbsp;·&nbsp; ← inside &nbsp;|&nbsp; outside → ' + sBtn;
+  update();
 }
-
-async function startMetronome(){
-  tryLoadVoices(); // iOS: guaranteed user gesture here
-  // iOS PWA: unlock speech synthesis with a silent utterance on first tap
-  try {
-    const unlock = new SpeechSynthesisUtterance('');
-    unlock.volume = 0;
-    window.speechSynthesis.speak(unlock);
-  } catch(e){}
-  if(!audioCtx){ audioCtx=new(window.AudioContext||window.webkitAudioContext)(); }
-  if(audioCtx.state==='suspended') await audioCtx.resume();
-  running=true; beatQueue=[]; currentBeatPos=1;
-  nextBeatTime=audioCtx.currentTime+0.12;
-  scheduler(); drawTimer=requestAnimationFrame(drawLoop);
-  document.getElementById('press-hint').innerHTML=(T[uiLang]||T.en).pressStop;
-
-  document.getElementById('beat-display').classList.add('running');
-  document.getElementById('beat-word').textContent='';
+window.rightHand = false;
+window.snooker = false;
+function toggleTable(){
+  window.snooker = !window.snooker;
+  var btn = document.getElementById('table-btn');
+  btn.textContent = window.snooker ? 'SNOOKER' : 'POOL';
+  btn.style.borderColor = window.snooker ? 'rgba(112,192,240,0.5)' : 'rgba(160,208,160,0.4)';
+  btn.style.color = window.snooker ? '#70c0f0' : '#a0d0a0';
+  // Update distance slider max label
+  document.getElementById('dist-far-lbl').textContent = window.snooker ? '14ft' : '9ft';
+  update();
 }
+window.addEventListener('load',update);
 
-function stopMetronome(){
-  running=false;
-  clearTimeout(schedulerTimer); cancelAnimationFrame(drawTimer);
-  beatQueue=[]; window.speechSynthesis.cancel();
-  document.getElementById('beat-num').textContent='—';
-  document.getElementById('beat-word').textContent='';
-  document.querySelectorAll('.pip').forEach(p=>p.classList.remove('active'));
-  document.getElementById('press-hint').innerHTML=(T[uiLang]||T.en).pressStart;
-
-  document.getElementById('beat-display').classList.remove('running');
-  if(document.body.classList.contains('fs-mode')) toggleFS();
-}
-
-document.getElementById('sl-bpm').addEventListener('input',function(){
-  bpm=parseInt(this.value);
-  document.getElementById('bpm-val').value=bpm;
-  document.getElementById('bpm-val').value=bpm;
-  document.getElementById('tempo-name').textContent=tempoName(bpm);
-  updateSpeedNotice();
-});
-
-document.querySelectorAll('#tsig-row .pill').forEach(btn=>btn.addEventListener('click',function(){
-  document.querySelectorAll('#tsig-row .pill').forEach(b=>b.classList.remove('active'));
-  this.classList.add('active'); beatsPerBar=parseInt(this.dataset.beats);
-  currentBeatPos=1; beatQueue=[]; buildPips();
-  if(running)nextBeatTime=audioCtx.currentTime+0.05;
-}));
-
-document.querySelectorAll('#subdiv-row .pill').forEach(btn=>btn.addEventListener('click',function(){
-  document.querySelectorAll('#subdiv-row .pill').forEach(b=>b.classList.remove('active'));
-  this.classList.add('active'); subdivision=this.dataset.subdiv;
-  beatQueue=[]; if(running)nextBeatTime=audioCtx.currentTime+0.05;
-}));
-
-document.querySelectorAll('#style-row .pill').forEach(btn=>btn.addEventListener('click',function(){
-  if(this.classList.contains('disabled'))return;
-  document.querySelectorAll('#style-row .pill').forEach(b=>b.classList.remove('active'));
-  this.classList.add('active'); voiceStyle=this.dataset.style;
-}));
-
-document.getElementById('tone-row').querySelectorAll('.pill').forEach(btn=>{
-  btn.addEventListener('click',function(){
-    document.querySelectorAll('#tone-row .pill').forEach(b=>b.classList.remove('active'));
-    this.classList.add('active'); clickTone=this.dataset.tone;
-  });
-});
-
-document.getElementById('flash-toggle').addEventListener('change',function(){
-  flashEnabled=this.checked;
-});
-
-// ════════════════════════════════════════════════════
-// i18n — Full UI localization
-// ════════════════════════════════════════════════════
-
-const LANGS = [
-  { code:'en',    name:'English',     flag:'🇺🇸' },
-  { code:'es',    name:'Español',     flag:'🇪🇸' },
-  { code:'fr',    name:'Français',    flag:'🇫🇷' },
-  { code:'de',    name:'Deutsch',     flag:'🇩🇪' },
-  { code:'it',    name:'Italiano',    flag:'🇮🇹' },
-  { code:'ja',    name:'日本語',        flag:'🇯🇵' },
-  { code:'pt',    name:'Português',   flag:'🇧🇷' },
-  { code:'zh',    name:'中文',          flag:'🇨🇳' },
-  { code:'ko',    name:'한국어',         flag:'🇰🇷' },
-  { code:'ar',    name:'العربية',      flag:'🇸🇦' },
-  { code:'ru',    name:'Русский',      flag:'🇷🇺' },
-  { code:'nl',    name:'Nederlands',  flag:'🇳🇱' },
-  { code:'pl',    name:'Polski',      flag:'🇵🇱' },
-  { code:'sv',    name:'Svenska',     flag:'🇸🇪' },
-  { code:'nb',    name:'Norsk',       flag:'🇳🇴' },
-  { code:'da',    name:'Dansk',       flag:'🇩🇰' },
-  { code:'fi',    name:'Suomi',       flag:'🇫🇮' },
-  { code:'cs',    name:'Čeština',     flag:'🇨🇿' },
-  { code:'sk',    name:'Slovenčina',  flag:'🇸🇰' },
-  { code:'ro',    name:'Română',      flag:'🇷🇴' },
-  { code:'hu',    name:'Magyar',      flag:'🇭🇺' },
-  { code:'hr',    name:'Hrvatski',    flag:'🇭🇷' },
-  { code:'el',    name:'Ελληνικά',    flag:'🇬🇷' },
-  { code:'tr',    name:'Türkçe',      flag:'🇹🇷' },
-  { code:'he',    name:'עברית',        flag:'🇮🇱' },
-  { code:'hi',    name:'हिन्दी',         flag:'🇮🇳' },
-  { code:'id',    name:'Indonesia',   flag:'🇮🇩' },
-  { code:'ms',    name:'Melayu',      flag:'🇲🇾' },
-  { code:'th',    name:'ภาษาไทย',       flag:'🇹🇭' },
-  { code:'vi',    name:'Tiếng Việt',  flag:'🇻🇳' },
-  { code:'uk',    name:'Українська',  flag:'🇺🇦' },
-  { code:'zh-TW', name:'繁體中文',       flag:'🇹🇼' },
-];
-
-// ── Translations (6 full, rest fall back to English) ──
-const T = {
-  en: {
-    subtitle:    'Speak the Beat',
-    tagline:     'A metronome that counts aloud',
-    pressStart:  'Press <em>HERE</em> to <em>START</em>',
-    pressStop:   'Press <em>HERE</em> to <em>STOP</em>',
-    tempo:       'Tempo',
-    timeSig:     'Time Signature',
-    subdiv:      'Subdivision',
-    beatOnly:    'Beat only',
-    eighths:     '· and ·',
-    sixteenths:  'e · and · a',
-    countStyle:  'Count Style',
-    allBeats:    'All beats',
-    oneOnly:     'One only',
-    silent:      'Silent',
-    clickTone:   'Click Tone',
-    wood:        'Wood',
-    bell:        'Bell',
-    beep:        'Beep',
-    rim:         'Rim',
-    soft:        'Soft',
-    screenFlash: 'Screen Flash',
-    flashLabel:  'Flash on each beat',
-    language:    'Language',
-    voice:       'Voice',
-    female:      '♀ Female',
-    male:        '♂ Male',
-    tapBtn:      'Tap <em>HERE</em> to Set Tempo',
-    speedWarn:   (lim) => `Above ${lim} BPM, voice counts beat 1 only.`,
-    helpTitle:   'How to use',
-    help: [
-      `<span class="hl-gold">Tap the green panel</span> or press <span class="hl-gold">spacebar</span> to start and stop.`,
-      `<span class="hl-blue">Time Signature</span> sets how many beats are in each bar. Beat 1 is always accented.`,
-      `<span class="hl-pink">Subdivision</span> adds quiet in-between clicks — 8th or 16th notes — so you can feel the pulse without counting them aloud.`,
-      `<span class="hl-orange">Count Style</span> controls what the voice says. <em>All beats</em> counts every beat. <em>One only</em> calls the downbeat only — useful at fast tempos. <em>Silent</em> lets the clicks do the work.`,
-      `<span class="hl-green">Click Tone</span> changes the sound of the click. Try <em>Bell</em> for a chime, <em>Beep</em> for a classic electronic feel, or <em>Soft</em> for quiet practice.`,
-      `<span class="hl-gold">Tap <em>HERE</em> to Set Tempo</span> — tap the button repeatedly in time and the BPM will lock to your tapping.`,
-      `The <span class="hl-gold">Voice</span> selector lets you choose who counts. Switch language to change the voice pool.`,
-      `The red <span class="hl-gold">GO!</span> button at the bottom enters full-screen mode — the beat number fills the entire screen, ideal for performance. Tap <span class="hl-gold">✕</span> in the corner or stop the metronome to exit full screen.`,
-    ],
-  },
-  es: {
-    subtitle:    'Habla el Ritmo',
-    tagline:     'Un metrónomo que cuenta en voz alta',
-    pressStart:  'Pulsa <em>AQUÍ</em> para <em>EMPEZAR</em>',
-    pressStop:   'Pulsa <em>AQUÍ</em> para <em>PARAR</em>',
-    tempo:       'Tempo',
-    timeSig:     'Compás',
-    subdiv:      'Subdivisión',
-    beatOnly:    'Solo pulso',
-    eighths:     '· y ·',
-    sixteenths:  'e · y · a',
-    countStyle:  'Estilo de cuenta',
-    allBeats:    'Todos los tiempos',
-    oneOnly:     'Solo el uno',
-    silent:      'Silencioso',
-    clickTone:   'Sonido del click',
-    wood:        'Madera',
-    bell:        'Campana',
-    beep:        'Pitido',
-    rim:         'Aro',
-    soft:        'Suave',
-    screenFlash: 'Flash de pantalla',
-    flashLabel:  'Flash en cada tiempo',
-    language:    'Idioma',
-    voice:       'Voz',
-    female:      '♀ Femenina',
-    male:        '♂ Masculina',
-    tapBtn:      'Toca <em>AQUÍ</em> para fijar el tempo',
-    speedWarn:   (lim) => `Por encima de ${lim} BPM, la voz solo cuenta el tiempo 1.`,
-    helpTitle:   'Cómo usar',
-    help: [
-      `<span class="hl-gold">Toca el panel verde</span> o pulsa <span class="hl-gold">espacio</span> para iniciar y parar.`,
-      `<span class="hl-blue">Compás</span> define cuántos tiempos hay en cada compás. El primer tiempo siempre está acentuado.`,
-      `<span class="hl-pink">Subdivisión</span> añade clicks intermedios — corcheas o semicorcheas — para sentir el pulso sin contarlos en voz alta.`,
-      `<span class="hl-orange">Estilo de cuenta</span> controla lo que dice la voz. <em>Todos los tiempos</em> cuenta cada tiempo. <em>Solo el uno</em> llama solo al primer tiempo. <em>Silencioso</em> deja trabajar a los clicks.`,
-      `<span class="hl-green">Sonido del click</span> cambia el sonido. Prueba <em>Campana</em> para un timbre, <em>Pitido</em> para estilo electrónico clásico, o <em>Suave</em> para práctica silenciosa.`,
-      `<span class="hl-gold">Toca <em>AQUÍ</em> para fijar el tempo</span> — toca el botón repetidamente al ritmo para ajustar el BPM.`,
-      `El selector de <span class="hl-gold">Voz</span> te permite elegir quién cuenta. Cambia el idioma para cambiar el grupo de voces.`,
-    ],
-  },
-  fr: {
-    subtitle:    'Parle le Rythme',
-    tagline:     'Un métronome qui compte à voix haute',
-    pressStart:  'Appuyez <em>ICI</em> pour <em>DÉMARRER</em>',
-    pressStop:   'Appuyez <em>ICI</em> pour <em>ARRÊTER</em>',
-    tempo:       'Tempo',
-    timeSig:     'Mesure',
-    subdiv:      'Subdivision',
-    beatOnly:    'Temps seul',
-    eighths:     '· et ·',
-    sixteenths:  'e · et · a',
-    countStyle:  'Style de compte',
-    allBeats:    'Tous les temps',
-    oneOnly:     'Un seulement',
-    silent:      'Silencieux',
-    clickTone:   'Son du click',
-    wood:        'Bois',
-    bell:        'Cloche',
-    beep:        'Bip',
-    rim:         'Rebord',
-    soft:        'Doux',
-    screenFlash: 'Flash écran',
-    flashLabel:  'Flash sur chaque temps',
-    language:    'Langue',
-    voice:       'Voix',
-    female:      '♀ Féminine',
-    male:        '♂ Masculine',
-    tapBtn:      'Tapez <em>ICI</em> pour fixer le tempo',
-    speedWarn:   (lim) => `Au-dessus de ${lim} BPM, la voix ne compte que le temps 1.`,
-    helpTitle:   "Mode d'emploi",
-    help: [
-      `<span class="hl-gold">Tapez le panneau vert</span> ou appuyez sur <span class="hl-gold">espace</span> pour démarrer et arrêter.`,
-      `<span class="hl-blue">Mesure</span> définit le nombre de temps par mesure. Le premier temps est toujours accentué.`,
-      `<span class="hl-pink">Subdivision</span> ajoute des clicks intermédiaires — croches ou doubles-croches — pour sentir la pulsation sans les compter à voix haute.`,
-      `<span class="hl-orange">Style de compte</span> contrôle ce que dit la voix. <em>Tous les temps</em> compte chaque temps. <em>Un seulement</em> appelle uniquement le premier temps. <em>Silencieux</em> laisse les clicks faire le travail.`,
-      `<span class="hl-green">Son du click</span> change le son. Essayez <em>Cloche</em> pour une sonnerie, <em>Bip</em> pour un style électronique classique, ou <em>Doux</em> pour une pratique silencieuse.`,
-      `<span class="hl-gold">Tapez <em>ICI</em> pour fixer le tempo</span> — tapez le bouton en rythme pour ajuster le BPM.`,
-      `Le sélecteur de <span class="hl-gold">Voix</span> vous permet de choisir qui compte. Changez de langue pour changer le groupe de voix.`,
-    ],
-  },
-  de: {
-    subtitle:    'Sprich den Takt',
-    tagline:     'Ein Metronom, das laut zählt',
-    pressStart:  '<em>HIER</em> drücken zum <em>STARTEN</em>',
-    pressStop:   '<em>HIER</em> drücken zum <em>STOPPEN</em>',
-    tempo:       'Tempo',
-    timeSig:     'Taktart',
-    subdiv:      'Unterteilung',
-    beatOnly:    'Nur Schlag',
-    eighths:     '· und ·',
-    sixteenths:  'e · und · a',
-    countStyle:  'Zählweise',
-    allBeats:    'Alle Schläge',
-    oneOnly:     'Nur Eins',
-    silent:      'Stumm',
-    clickTone:   'Click-Ton',
-    wood:        'Holz',
-    bell:        'Glocke',
-    beep:        'Piep',
-    rim:         'Rand',
-    soft:        'Sanft',
-    screenFlash: 'Bildschirm-Flash',
-    flashLabel:  'Flash auf jeden Schlag',
-    language:    'Sprache',
-    voice:       'Stimme',
-    female:      '♀ Weiblich',
-    male:        '♂ Männlich',
-    tapBtn:      '<em>HIER</em> tippen für Tempo',
-    speedWarn:   (lim) => `Über ${lim} BPM zählt die Stimme nur Schlag 1.`,
-    helpTitle:   'Anleitung',
-    help: [
-      `<span class="hl-gold">Grünes Feld antippen</span> oder <span class="hl-gold">Leertaste</span> drücken zum Starten und Stoppen.`,
-      `<span class="hl-blue">Taktart</span> legt fest, wie viele Schläge ein Takt hat. Schlag 1 ist immer betont.`,
-      `<span class="hl-pink">Unterteilung</span> fügt leise Zwischenclicks hinzu — Achtel oder Sechzehntel — um den Puls zu spüren, ohne laut zu zählen.`,
-      `<span class="hl-orange">Zählweise</span> steuert, was die Stimme sagt. <em>Alle Schläge</em> zählt jeden Schlag. <em>Nur Eins</em> ruft nur den ersten Schlag. <em>Stumm</em> lässt die Clicks die Arbeit machen.`,
-      `<span class="hl-green">Click-Ton</span> ändert den Klang. Probiere <em>Glocke</em> für einen Glockenton, <em>Piep</em> für klassischen Elektronik-Stil, oder <em>Sanft</em> für leises Üben.`,
-      `<span class="hl-gold"><em>HIER</em> tippen für Tempo</span> — im Rhythmus tippen, um BPM anzupassen.`,
-      `Der <span class="hl-gold">Stimmen</span>-Wähler lässt Sie wählen, wer zählt. Sprache wechseln ändert den Stimmen-Pool.`,
-    ],
-  },
-  it: {
-    subtitle:    'Parla il Ritmo',
-    tagline:     'Un metronomo che conta ad alta voce',
-    pressStart:  'Premi <em>QUI</em> per <em>INIZIARE</em>',
-    pressStop:   'Premi <em>QUI</em> per <em>FERMARE</em>',
-    tempo:       'Tempo',
-    timeSig:     'Tempo musicale',
-    subdiv:      'Suddivisione',
-    beatOnly:    'Solo battuta',
-    eighths:     '· e ·',
-    sixteenths:  'e · e · a',
-    countStyle:  'Stile di conteggio',
-    allBeats:    'Tutti i tempi',
-    oneOnly:     'Solo uno',
-    silent:      'Silenzioso',
-    clickTone:   'Suono del click',
-    wood:        'Legno',
-    bell:        'Campana',
-    beep:        'Bip',
-    rim:         'Bordo',
-    soft:        'Morbido',
-    screenFlash: 'Flash schermo',
-    flashLabel:  'Flash su ogni battuta',
-    language:    'Lingua',
-    voice:       'Voce',
-    female:      '♀ Femminile',
-    male:        '♂ Maschile',
-    tapBtn:      'Tocca <em>QUI</em> per impostare il tempo',
-    speedWarn:   (lim) => `Oltre ${lim} BPM, la voce conta solo il tempo 1.`,
-    helpTitle:   'Come usare',
-    help: [
-      `<span class="hl-gold">Tocca il pannello verde</span> o premi <span class="hl-gold">spazio</span> per avviare e fermare.`,
-      `<span class="hl-blue">Tempo musicale</span> imposta quante battute ci sono in ogni misura. La prima battuta è sempre accentata.`,
-      `<span class="hl-pink">Suddivisione</span> aggiunge click intermedi — ottavi o sedicesimi — per sentire il ritmo senza contarli ad alta voce.`,
-      `<span class="hl-orange">Stile di conteggio</span> controlla cosa dice la voce. <em>Tutti i tempi</em> conta ogni battuta. <em>Solo uno</em> chiama solo il primo tempo. <em>Silenzioso</em> lascia lavorare i click.`,
-      `<span class="hl-green">Suono del click</span> cambia il suono. Prova <em>Campana</em> per un tintinnio, <em>Bip</em> per uno stile elettronico classico, o <em>Morbido</em> per una pratica silenziosa.`,
-      `<span class="hl-gold">Tocca <em>QUI</em> per impostare il tempo</span> — tocca il pulsante ripetutamente a tempo per regolare il BPM.`,
-      `Il selettore di <span class="hl-gold">Voce</span> ti permette di scegliere chi conta. Cambia lingua per cambiare il gruppo di voci.`,
-    ],
-  },
-  ja: {
-    subtitle:    'ビートを語る',
-    tagline:     '声でカウントするメトロノーム',
-    pressStart:  '<em>ここ</em>を押して<em>スタート</em>',
-    pressStop:   '<em>ここ</em>を押して<em>ストップ</em>',
-    tempo:       'テンポ',
-    timeSig:     '拍子',
-    subdiv:      '細分化',
-    beatOnly:    '拍のみ',
-    eighths:     '· と ·',
-    sixteenths:  'e · と · a',
-    countStyle:  'カウントスタイル',
-    allBeats:    '全拍',
-    oneOnly:     '1のみ',
-    silent:      '無音',
-    clickTone:   'クリック音',
-    wood:        '木',
-    bell:        'ベル',
-    beep:        'ビープ',
-    rim:         'リム',
-    soft:        '柔らか',
-    screenFlash: '画面フラッシュ',
-    flashLabel:  '各拍でフラッシュ',
-    language:    '言語',
-    voice:       '音声',
-    female:      '♀ 女性',
-    male:        '♂ 男性',
-    tapBtn:      '<em>ここ</em>をタップしてテンポ設定',
-    speedWarn:   (lim) => `${lim} BPM以上では、音声は拍1のみをカウントします。`,
-    helpTitle:   '使い方',
-    help: [
-      `<span class="hl-gold">緑のパネルをタップ</span>または<span class="hl-gold">スペースキー</span>を押してスタート・ストップします。`,
-      `<span class="hl-blue">拍子</span>は1小節の拍数を設定します。最初の拍は常にアクセントが付きます。`,
-      `<span class="hl-pink">細分化</span>は8分音符や16分音符の静かな中間クリックを追加し、声で数えなくてもパルスを感じられます。`,
-      `<span class="hl-orange">カウントスタイル</span>は音声の発言を制御します。<em>全拍</em>は各拍をカウントします。<em>1のみ</em>は最初の拍だけを呼び出します。<em>無音</em>はクリックに任せます。`,
-      `<span class="hl-green">クリック音</span>はクリックの音を変えます。<em>ベル</em>でチャイム音、<em>ビープ</em>でクラシックな電子音、<em>柔らか</em>で静かな練習ができます。`,
-      `<span class="hl-gold"><em>ここ</em>をタップしてテンポ設定</span> — リズムに合わせてボタンをタップするとBPMが合わせられます。`,
-      `<span class="hl-gold">音声</span>セレクターでカウントする人を選べます。言語を変えると音声プールが変わります。`,
-    ],
-  },
-};
-
-// Fallback: all other languages use English strings
-// ── Remaining 26 language translations ──
-const T_EXTRA = {
-  'pt': {
-    subtitle: "Fala o Ritmo",
-    tagline: "Um metrônomo que conta em voz alta",
-    pressStart: "Toque <em>AQUI</em> para <em>COMEÇAR</em>",
-    pressStop: "Toque <em>AQUI</em> para <em>PARAR</em>",
-    tempo: "Tempo",
-    timeSig: "Compasso",
-    subdiv: "Subdivisão",
-    beatOnly: "Só o pulso",
-    eighths: "· e ·",
-    sixteenths: "e · e · a",
-    countStyle: "Estilo de contagem",
-    allBeats: "Todos os tempos",
-    oneOnly: "Só o um",
-    silent: "Silencioso",
-    clickTone: "Tom do clique",
-    wood: "Madeira",
-    bell: "Sino",
-    beep: "Bipe",
-    rim: "Aro",
-    soft: "Suave",
-    screenFlash: "Flash na tela",
-    flashLabel: "Flash em cada tempo",
-    language: "Idioma",
-    voice: "Voz",
-    female: "♀ Feminina",
-    male: "♂ Masculina",
-    tapBtn: "Toque <em>AQUI</em> para definir o tempo",
-    speedWarn: (lim) => `Acima de ${{lim}} BPM, a voz conta só o tempo 1.`,
-    helpTitle: "Como usar",
-    help: [
-      `Toque o <span class="hl-gold">painel verde</span> ou pressione <span class="hl-gold">espaço</span> para iniciar e parar.`,
-      `<span class="hl-blue">Compasso</span> define quantos tempos há em cada compasso. O tempo 1 é sempre acentuado.`,
-      `<span class="hl-pink">Subdivisão</span> adiciona cliques intermediários — colcheias ou semicolcheias — para sentir o pulso.`,
-      `<span class="hl-orange">Estilo de contagem</span> controla o que a voz diz. <em>Todos os tempos</em> conta cada tempo. <em>Só o um</em> chama apenas o primeiro tempo. <em>Silencioso</em> deixa os cliques trabalharem.`,
-      `<span class="hl-green">Tom do clique</span> muda o som. Experimente <em>Sino</em> para um timbre, <em>Bipe</em> para estilo eletrônico, ou <em>Suave</em> para prática silenciosa.`,
-      `Toque <span class="hl-gold"><em>AQUI</em> para definir o tempo</span> — toque repetidamente no ritmo para ajustar o BPM.`,
-      `O seletor de <span class="hl-gold">Voz</span> permite escolher quem conta. Mude o idioma para alterar o grupo de vozes.`,
-    ],
-  },
-  'zh': {
-    subtitle: "说出节拍",
-    tagline: "一个大声计数的节拍器",
-    pressStart: "点击<em>这里</em><em>开始</em>",
-    pressStop: "点击<em>这里</em><em>停止</em>",
-    tempo: "速度",
-    timeSig: "拍号",
-    subdiv: "细分",
-    beatOnly: "仅拍子",
-    eighths: "· 和 ·",
-    sixteenths: "e · 和 · a",
-    countStyle: "计数方式",
-    allBeats: "每拍",
-    oneOnly: "仅一拍",
-    silent: "静音",
-    clickTone: "点击音",
-    wood: "木声",
-    bell: "铃声",
-    beep: "蜂鸣",
-    rim: "边缘",
-    soft: "柔和",
-    screenFlash: "屏幕闪光",
-    flashLabel: "每拍闪光",
-    language: "语言",
-    voice: "语音",
-    female: "♀ 女声",
-    male: "♂ 男声",
-    tapBtn: "点击<em>这里</em>设置速度",
-    speedWarn: (lim) => `超过${{lim}} BPM时，语音仅计第1拍。`,
-    helpTitle: "使用说明",
-    help: [
-      `点击<span class="hl-gold">绿色面板</span>或按<span class="hl-gold">空格键</span>开始和停止。`,
-      `<span class="hl-blue">拍号</span>设定每小节的拍数。第1拍总是有重音。`,
-      `<span class="hl-pink">细分</span>添加安静的中间点击——八分音符或十六分音符——让您感受律动。`,
-      `<span class="hl-orange">计数方式</span>控制语音说什么。<em>每拍</em>计每一拍。<em>仅一拍</em>只喊第一拍。<em>静音</em>让点击声完成工作。`,
-      `<span class="hl-green">点击音</span>改变点击的声音。试试<em>铃声</em>、<em>蜂鸣</em>或<em>柔和</em>。`,
-      `点击<span class="hl-gold"><em>这里</em>设置速度</span>——按节拍反复点击以调整BPM。`,
-      `<span class="hl-gold">语音</span>选择器让您选择谁来计数。切换语言可更改语音库。`,
-    ],
-  },
-  'ko': {
-    subtitle: "박자를 말하다",
-    tagline: "소리내어 세는 메트로놈",
-    pressStart: "<em>여기</em>를 눌러 <em>시작</em>",
-    pressStop: "<em>여기</em>를 눌러 <em>정지</em>",
-    tempo: "템포",
-    timeSig: "박자표",
-    subdiv: "세분화",
-    beatOnly: "박자만",
-    eighths: "· 과 ·",
-    sixteenths: "e · 과 · a",
-    countStyle: "카운트 방식",
-    allBeats: "모든 박자",
-    oneOnly: "1만",
-    silent: "무음",
-    clickTone: "클릭음",
-    wood: "나무",
-    bell: "벨",
-    beep: "비프",
-    rim: "림",
-    soft: "부드럽게",
-    screenFlash: "화면 플래시",
-    flashLabel: "각 박자마다 플래시",
-    language: "언어",
-    voice: "음성",
-    female: "♀ 여성",
-    male: "♂ 남성",
-    tapBtn: "<em>여기</em>를 탭하여 템포 설정",
-    speedWarn: (lim) => `${{lim}} BPM 이상에서는 1박만 카운트합니다.`,
-    helpTitle: "사용법",
-    help: [
-      `<span class="hl-gold">녹색 패널</span>을 탭하거나 <span class="hl-gold">스페이스바</span>를 눌러 시작/정지합니다.`,
-      `<span class="hl-blue">박자표</span>는 마디당 박자 수를 설정합니다. 1박은 항상 강조됩니다.`,
-      `<span class="hl-pink">세분화</span>는 8분음표 또는 16분음표 클릭을 추가하여 박자감을 느낄 수 있게 합니다.`,
-      `<span class="hl-orange">카운트 방식</span>은 음성이 말하는 내용을 제어합니다. <em>모든 박자</em>는 각 박자를 셉니다. <em>1만</em>은 첫 박만 부릅니다. <em>무음</em>은 클릭이 작동하게 둡니다.`,
-      `<span class="hl-green">클릭음</span>은 소리를 바꿉니다. <em>벨</em>, <em>비프</em>, 또는 <em>부드럽게</em>를 사용해 보세요.`,
-      `<span class="hl-gold"><em>여기</em>를 탭하여 템포 설정</span> — 리듬에 맞춰 반복 탭하면 BPM이 맞춰집니다.`,
-      `<span class="hl-gold">음성</span> 선택기로 카운트할 사람을 선택합니다. 언어를 바꾸면 음성 풀이 변경됩니다.`,
-    ],
-  },
-  'ar': {
-    subtitle: "انطق الإيقاع",
-    tagline: "ميترونوم يعدّ بصوت عالٍ",
-    pressStart: "اضغط <em>هنا</em> لـ<em>البدء</em>",
-    pressStop: "اضغط <em>هنا</em> لـ<em>الإيقاف</em>",
-    tempo: "الإيقاع",
-    timeSig: "الميزان الموسيقي",
-    subdiv: "التقسيم الفرعي",
-    beatOnly: "النبضة فقط",
-    eighths: "· و ·",
-    sixteenths: "e · و · a",
-    countStyle: "أسلوب العدّ",
-    allBeats: "جميع النبضات",
-    oneOnly: "الأولى فقط",
-    silent: "صامت",
-    clickTone: "نبرة النقر",
-    wood: "خشب",
-    bell: "جرس",
-    beep: "صفير",
-    rim: "حافة",
-    soft: "ناعم",
-    screenFlash: "وميض الشاشة",
-    flashLabel: "وميض عند كل نبضة",
-    language: "اللغة",
-    voice: "الصوت",
-    female: "♀ أنثى",
-    male: "♂ ذكر",
-    tapBtn: "انقر <em>هنا</em> لضبط الإيقاع",
-    speedWarn: (lim) => `فوق ${{lim}} BPM، الصوت يعدّ النبضة 1 فقط.`,
-    helpTitle: "طريقة الاستخدام",
-    help: [
-      `انقر على <span class="hl-gold">اللوحة الخضراء</span> أو اضغط <span class="hl-gold">المسافة</span> للبدء والإيقاف.`,
-      `<span class="hl-blue">الميزان الموسيقي</span> يحدد عدد النبضات في كل مقياس. النبضة 1 دائماً مؤكدة.`,
-      `<span class="hl-pink">التقسيم الفرعي</span> يضيف نقرات هادئة بين النبضات لشعور أعمق بالإيقاع.`,
-      `<span class="hl-orange">أسلوب العدّ</span> يتحكم في ما يقوله الصوت. <em>جميع النبضات</em> يعدّ كل نبضة. <em>الأولى فقط</em> ينادي النبضة الأولى فقط. <em>صامت</em> يترك النقرات تعمل.`,
-      `<span class="hl-green">نبرة النقر</span> تغير الصوت. جرب <em>جرس</em> أو <em>صفير</em> أو <em>ناعم</em>.`,
-      `انقر <span class="hl-gold"><em>هنا</em> لضبط الإيقاع</span> — انقر بالتكرار على الإيقاع لضبط BPM.`,
-      `محدد <span class="hl-gold">الصوت</span> يتيح اختيار من يعدّ. تغيير اللغة يغير مجموعة الأصوات.`,
-    ],
-  },
-  'ru': {
-    subtitle: "Говори в ритм",
-    tagline: "Метроном, который считает вслух",
-    pressStart: "Нажмите <em>ЗДЕСЬ</em> для <em>СТАРТА</em>",
-    pressStop: "Нажмите <em>ЗДЕСЬ</em> для <em>СТОПА</em>",
-    tempo: "Темп",
-    timeSig: "Размер",
-    subdiv: "Деление",
-    beatOnly: "Только удар",
-    eighths: "· и ·",
-    sixteenths: "e · и · a",
-    countStyle: "Стиль счёта",
-    allBeats: "Все удары",
-    oneOnly: "Только раз",
-    silent: "Тихо",
-    clickTone: "Звук клика",
-    wood: "Дерево",
-    bell: "Колокол",
-    beep: "Сигнал",
-    rim: "Обод",
-    soft: "Мягко",
-    screenFlash: "Вспышка экрана",
-    flashLabel: "Вспышка на каждый удар",
-    language: "Язык",
-    voice: "Голос",
-    female: "♀ Женский",
-    male: "♂ Мужской",
-    tapBtn: "Нажмите <em>ЗДЕСЬ</em> для установки темпа",
-    speedWarn: (lim) => `Выше ${{lim}} BPM голос считает только удар 1.`,
-    helpTitle: "Как пользоваться",
-    help: [
-      `Нажмите <span class="hl-gold">зелёную панель</span> или клавишу <span class="hl-gold">пробел</span> для старта и стопа.`,
-      `<span class="hl-blue">Размер</span> задаёт количество ударов в такте. Удар 1 всегда акцентирован.`,
-      `<span class="hl-pink">Деление</span> добавляет тихие промежуточные клики — восьмые или шестнадцатые.`,
-      `<span class="hl-orange">Стиль счёта</span> управляет голосом. <em>Все удары</em> считает каждый. <em>Только раз</em> называет только первый удар. <em>Тихо</em> — работают только клики.`,
-      `<span class="hl-green">Звук клика</span> меняет тембр. Попробуйте <em>Колокол</em>, <em>Сигнал</em> или <em>Мягко</em>.`,
-      `Нажимайте <span class="hl-gold"><em>ЗДЕСЬ</em></span> в ритм для установки темпа.`,
-      `Селектор <span class="hl-gold">Голос</span> позволяет выбрать, кто считает. Смена языка меняет пул голосов.`,
-    ],
-  },
-  'nl': {
-    subtitle: "Spreek de Maat",
-    tagline: "Een metronoom die hardop telt",
-    pressStart: "Druk <em>HIER</em> om te <em>STARTEN</em>",
-    pressStop: "Druk <em>HIER</em> om te <em>STOPPEN</em>",
-    tempo: "Tempo",
-    timeSig: "Maatsoort",
-    subdiv: "Onderverdeling",
-    beatOnly: "Alleen slag",
-    eighths: "· en ·",
-    sixteenths: "e · en · a",
-    countStyle: "Telstijl",
-    allBeats: "Alle slagen",
-    oneOnly: "Alleen één",
-    silent: "Stil",
-    clickTone: "Klikgeluid",
-    wood: "Hout",
-    bell: "Bel",
-    beep: "Piep",
-    rim: "Rand",
-    soft: "Zacht",
-    screenFlash: "Schermflits",
-    flashLabel: "Flits bij elke slag",
-    language: "Taal",
-    voice: "Stem",
-    female: "♀ Vrouwelijk",
-    male: "♂ Mannelijk",
-    tapBtn: "Tik <em>HIER</em> om tempo in te stellen",
-    speedWarn: (lim) => `Boven ${{lim}} BPM telt de stem alleen slag 1.`,
-    helpTitle: "Gebruiksaanwijzing",
-    help: [
-      `Tik op het <span class="hl-gold">groene paneel</span> of druk op <span class="hl-gold">spatiebalk</span> om te starten en stoppen.`,
-      `<span class="hl-blue">Maatsoort</span> stelt het aantal slagen per maat in. Slag 1 is altijd geaccentueerd.`,
-      `<span class="hl-pink">Onderverdeling</span> voegt stille tussenclicks toe — achtste of zestiende noten.`,
-      `<span class="hl-orange">Telstijl</span> bepaalt wat de stem zegt. <em>Alle slagen</em> telt elke slag. <em>Alleen één</em> roept alleen de eerste slag. <em>Stil</em> laat de clicks het werk doen.`,
-      `<span class="hl-green">Klikgeluid</span> verandert het geluid. Probeer <em>Bel</em>, <em>Piep</em> of <em>Zacht</em>.`,
-      `Tik <span class="hl-gold"><em>HIER</em></span> in het ritme om het BPM in te stellen.`,
-      `De <span class="hl-gold">Stem</span>-selector laat u kiezen wie telt. Taal wisselen wijzigt de stemmenpool.`,
-    ],
-  },
-  'pl': {
-    subtitle: "Mów w Rytm",
-    tagline: "Metronom, który liczy na głos",
-    pressStart: "Naciśnij <em>TUTAJ</em> aby <em>ZACZĄĆ</em>",
-    pressStop: "Naciśnij <em>TUTAJ</em> aby <em>ZATRZYMAĆ</em>",
-    tempo: "Tempo",
-    timeSig: "Metrum",
-    subdiv: "Podział",
-    beatOnly: "Tylko uderzenie",
-    eighths: "· i ·",
-    sixteenths: "e · i · a",
-    countStyle: "Styl liczenia",
-    allBeats: "Wszystkie uderzenia",
-    oneOnly: "Tylko jeden",
-    silent: "Cicho",
-    clickTone: "Dźwięk kliknięcia",
-    wood: "Drewno",
-    bell: "Dzwon",
-    beep: "Sygnał",
-    rim: "Obręcz",
-    soft: "Miękko",
-    screenFlash: "Błysk ekranu",
-    flashLabel: "Błysk przy każdym uderzeniu",
-    language: "Język",
-    voice: "Głos",
-    female: "♀ Żeński",
-    male: "♂ Męski",
-    tapBtn: "Stuknij <em>TUTAJ</em>, aby ustawić tempo",
-    speedWarn: (lim) => `Powyżej ${{lim}} BPM głos liczy tylko uderzenie 1.`,
-    helpTitle: "Jak używać",
-    help: [
-      `Stuknij <span class="hl-gold">zielony panel</span> lub naciśnij <span class="hl-gold">spację</span>, aby uruchomić i zatrzymać.`,
-      `<span class="hl-blue">Metrum</span> ustawia liczbę uderzeń na takt. Uderzenie 1 jest zawsze akcentowane.`,
-      `<span class="hl-pink">Podział</span> dodaje ciche kliknięcia pomiędzy uderzeniami — ósemki lub szesnastki.`,
-      `<span class="hl-orange">Styl liczenia</span> kontroluje co mówi głos. <em>Wszystkie</em> liczy każde uderzenie. <em>Tylko jeden</em> wywołuje tylko pierwsze. <em>Cicho</em> pozwala kliknięciom pracować.`,
-      `<span class="hl-green">Dźwięk kliknięcia</span> zmienia brzmienie. Wypróbuj <em>Dzwon</em>, <em>Sygnał</em> lub <em>Miękko</em>.`,
-      `Stukaj <span class="hl-gold"><em>TUTAJ</em></span> w rytmie, aby ustawić BPM.`,
-      `Selektor <span class="hl-gold">Głos</span> pozwala wybrać, kto liczy. Zmiana języka zmienia pulę głosów.`,
-    ],
-  },
-  'sv': {
-    subtitle: "Tala Takten",
-    tagline: "En metronom som räknar högt",
-    pressStart: "Tryck <em>HÄR</em> för att <em>STARTA</em>",
-    pressStop: "Tryck <em>HÄR</em> för att <em>STOPPA</em>",
-    tempo: "Tempo",
-    timeSig: "Taktart",
-    subdiv: "Indelning",
-    beatOnly: "Bara slag",
-    eighths: "· och ·",
-    sixteenths: "e · och · a",
-    countStyle: "Räknesätt",
-    allBeats: "Alla slag",
-    oneOnly: "Bara ett",
-    silent: "Tyst",
-    clickTone: "Klickljud",
-    wood: "Trä",
-    bell: "Klocka",
-    beep: "Pip",
-    rim: "Kant",
-    soft: "Mjukt",
-    screenFlash: "Skärmblixtar",
-    flashLabel: "Blixt vid varje slag",
-    language: "Språk",
-    voice: "Röst",
-    female: "♀ Kvinna",
-    male: "♂ Man",
-    tapBtn: "Tryck <em>HÄR</em> för att ange tempo",
-    speedWarn: (lim) => `Över ${{lim}} BPM räknar rösten bara slag 1.`,
-    helpTitle: "Hur man använder",
-    help: [
-      `Tryck på den <span class="hl-gold">gröna panelen</span> eller tryck <span class="hl-gold">mellanslag</span> för att starta och stoppa.`,
-      `<span class="hl-blue">Taktart</span> anger antal slag per takt. Slag 1 är alltid betonat.`,
-      `<span class="hl-pink">Indelning</span> lägger till tysta mellanklick — åttondelar eller sextondedelar.`,
-      `<span class="hl-orange">Räknesätt</span> styr vad rösten säger. <em>Alla slag</em> räknar varje. <em>Bara ett</em> ropar bara slag 1. <em>Tyst</em> låter klicken arbeta.`,
-      `<span class="hl-green">Klickljud</span> ändrar klangen. Prova <em>Klocka</em>, <em>Pip</em> eller <em>Mjukt</em>.`,
-      `Tryck <span class="hl-gold"><em>HÄR</em></span> i takt för att ange BPM.`,
-      `<span class="hl-gold">Röst</span>-väljaren låter dig välja vem som räknar.`,
-    ],
-  },
-  'nb': {
-    subtitle: "Tal Takten",
-    tagline: "Et metronom som teller høyt",
-    pressStart: "Trykk <em>HER</em> for å <em>STARTE</em>",
-    pressStop: "Trykk <em>HER</em> for å <em>STOPPE</em>",
-    tempo: "Tempo",
-    timeSig: "Taktart",
-    subdiv: "Inndeling",
-    beatOnly: "Bare slag",
-    eighths: "· og ·",
-    sixteenths: "e · og · a",
-    countStyle: "Tellemåte",
-    allBeats: "Alle slag",
-    oneOnly: "Bare ett",
-    silent: "Stille",
-    clickTone: "Klikklyd",
-    wood: "Tre",
-    bell: "Klokke",
-    beep: "Pip",
-    rim: "Kant",
-    soft: "Mykt",
-    screenFlash: "Skjermblink",
-    flashLabel: "Blink ved hvert slag",
-    language: "Språk",
-    voice: "Stemme",
-    female: "♀ Kvinne",
-    male: "♂ Mann",
-    tapBtn: "Trykk <em>HER</em> for å sette tempo",
-    speedWarn: (lim) => `Over ${{lim}} BPM teller stemmen bare slag 1.`,
-    helpTitle: "Slik bruker du",
-    help: [
-      `Trykk på det <span class="hl-gold">grønne panelet</span> eller trykk <span class="hl-gold">mellomrom</span> for å starte og stoppe.`,
-      `<span class="hl-blue">Taktart</span> angir antall slag per takt. Slag 1 er alltid betont.`,
-      `<span class="hl-pink">Inndeling</span> legger til stille mellomklikk — åttendedeler eller sekstendedeler.`,
-      `<span class="hl-orange">Tellemåte</span> styrer hva stemmen sier. <em>Alle slag</em> teller hvert slag. <em>Bare ett</em> roper bare slag 1. <em>Stille</em> lar klikkene arbeide.`,
-      `<span class="hl-green">Klikklyd</span> endrer lyden. Prøv <em>Klokke</em>, <em>Pip</em> eller <em>Mykt</em>.`,
-      `Trykk <span class="hl-gold"><em>HER</em></span> i takt for å angi BPM.`,
-      `<span class="hl-gold">Stemme</span>-velgeren lar deg velge hvem som teller.`,
-    ],
-  },
-  'da': {
-    subtitle: "Sig Takten",
-    tagline: "Et metronom der tæller højt",
-    pressStart: "Tryk <em>HER</em> for at <em>STARTE</em>",
-    pressStop: "Tryk <em>HER</em> for at <em>STOPPE</em>",
-    tempo: "Tempo",
-    timeSig: "Taktart",
-    subdiv: "Inddeling",
-    beatOnly: "Kun slag",
-    eighths: "· og ·",
-    sixteenths: "e · og · a",
-    countStyle: "Tællemåde",
-    allBeats: "Alle slag",
-    oneOnly: "Kun et",
-    silent: "Stille",
-    clickTone: "Kliklyd",
-    wood: "Træ",
-    bell: "Klokke",
-    beep: "Bip",
-    rim: "Kant",
-    soft: "Blød",
-    screenFlash: "Skærmblink",
-    flashLabel: "Blink ved hvert slag",
-    language: "Sprog",
-    voice: "Stemme",
-    female: "♀ Kvinde",
-    male: "♂ Mand",
-    tapBtn: "Tryk <em>HER</em> for at indstille tempo",
-    speedWarn: (lim) => `Over ${{lim}} BPM tæller stemmen kun slag 1.`,
-    helpTitle: "Sådan bruges den",
-    help: [
-      `Tryk på det <span class="hl-gold">grønne panel</span> eller tryk <span class="hl-gold">mellemrum</span> for at starte og stoppe.`,
-      `<span class="hl-blue">Taktart</span> angiver antal slag per takt. Slag 1 er altid betont.`,
-      `<span class="hl-pink">Inddeling</span> tilføjer stille mellemklik — ottendedele eller sekstendedele.`,
-      `<span class="hl-orange">Tællemåde</span> styrer hvad stemmen siger. <em>Alle slag</em> tæller hvert slag. <em>Kun et</em> råber kun slag 1. <em>Stille</em> lader klikkene arbejde.`,
-      `<span class="hl-green">Kliklyd</span> ændrer lyden. Prøv <em>Klokke</em>, <em>Bip</em> eller <em>Blød</em>.`,
-      `Tryk <span class="hl-gold"><em>HER</em></span> i takt for at angive BPM.`,
-      `<span class="hl-gold">Stemme</span>-vælgeren lader dig vælge hvem der tæller.`,
-    ],
-  },
-  'fi': {
-    subtitle: "Lausu Tahti",
-    tagline: "Metronomi joka laskee ääneen",
-    pressStart: "Paina <em>TÄSTÄ</em> <em>ALOITTAAKSESI</em>",
-    pressStop: "Paina <em>TÄSTÄ</em> <em>PYSÄYTTÄÄKSESI</em>",
-    tempo: "Tempo",
-    timeSig: "Tahtilaji",
-    subdiv: "Jaottelu",
-    beatOnly: "Vain isku",
-    eighths: "· ja ·",
-    sixteenths: "e · ja · a",
-    countStyle: "Laskutapa",
-    allBeats: "Kaikki iskut",
-    oneOnly: "Vain yksi",
-    silent: "Hiljainen",
-    clickTone: "Klikkiääni",
-    wood: "Puu",
-    bell: "Kello",
-    beep: "Piippaus",
-    rim: "Reuna",
-    soft: "Pehmeä",
-    screenFlash: "Näyttövälähdys",
-    flashLabel: "Välähdys joka iskulla",
-    language: "Kieli",
-    voice: "Ääni",
-    female: "♀ Nainen",
-    male: "♂ Mies",
-    tapBtn: "Napauta <em>TÄSTÄ</em> tempon asettamiseksi",
-    speedWarn: (lim) => `Yli ${{lim}} BPM ääni laskee vain iskun 1.`,
-    helpTitle: "Käyttöohje",
-    help: [
-      `Napauta <span class="hl-gold">vihreää paneelia</span> tai paina <span class="hl-gold">välilyöntiä</span> aloittaaksesi ja pysäyttääksesi.`,
-      `<span class="hl-blue">Tahtilaji</span> asettaa iskujen määrän per tahti. Isku 1 on aina korostettu.`,
-      `<span class="hl-pink">Jaottelu</span> lisää hiljaisia väliklikkayksia — kahdeksasosia tai kuudestoistaosia.`,
-      `<span class="hl-orange">Laskutapa</span> ohjaa mitä ääni sanoo. <em>Kaikki iskut</em> laskee jokaisen. <em>Vain yksi</em> huutaa vain ensimmäisen. <em>Hiljainen</em> antaa klikkausten toimia.`,
-      `<span class="hl-green">Klikkiääni</span> muuttaa ääntä. Kokeile <em>Kelloa</em>, <em>Piippausta</em> tai <em>Pehmeää</em>.`,
-      `Napauta <span class="hl-gold"><em>TÄSTÄ</em></span> rytmissä BPM:n asettamiseksi.`,
-      `<span class="hl-gold">Ääni</span>-valitsin antaa valita kuka laskee.`,
-    ],
-  },
-  'cs': {
-    subtitle: "Říkej Takt",
-    tagline: "Metronom, který počítá nahlas",
-    pressStart: "Stiskněte <em>ZDE</em> pro <em>START</em>",
-    pressStop: "Stiskněte <em>ZDE</em> pro <em>STOP</em>",
-    tempo: "Tempo",
-    timeSig: "Taktové označení",
-    subdiv: "Dělení",
-    beatOnly: "Jen doba",
-    eighths: "· a ·",
-    sixteenths: "e · a · a",
-    countStyle: "Styl počítání",
-    allBeats: "Všechny doby",
-    oneOnly: "Jen jedna",
-    silent: "Ticho",
-    clickTone: "Zvuk kliknutí",
-    wood: "Dřevo",
-    bell: "Zvon",
-    beep: "Pípnutí",
-    rim: "Okraj",
-    soft: "Jemně",
-    screenFlash: "Záblesk obrazovky",
-    flashLabel: "Záblesk na každou dobu",
-    language: "Jazyk",
-    voice: "Hlas",
-    female: "♀ Ženský",
-    male: "♂ Mužský",
-    tapBtn: "Klepněte <em>ZDE</em> pro nastavení tempa",
-    speedWarn: (lim) => `Nad ${{lim}} BPM hlas počítá jen dobu 1.`,
-    helpTitle: "Jak používat",
-    help: [
-      `Klepněte na <span class="hl-gold">zelený panel</span> nebo stiskněte <span class="hl-gold">mezerník</span> pro start a stop.`,
-      `<span class="hl-blue">Taktové označení</span> nastavuje počet dob v taktu. Doba 1 je vždy zdůrazněna.`,
-      `<span class="hl-pink">Dělení</span> přidává tiché mezikliknutí — osminové nebo šestnáctinové noty.`,
-      `<span class="hl-orange">Styl počítání</span> řídí co hlas říká. <em>Všechny doby</em> počítá každou. <em>Jen jedna</em> volá jen první. <em>Ticho</em> nechá kliknutí pracovat.`,
-      `<span class="hl-green">Zvuk kliknutí</span> mění zvuk. Vyzkoušejte <em>Zvon</em>, <em>Pípnutí</em> nebo <em>Jemně</em>.`,
-      `Klepejte <span class="hl-gold"><em>ZDE</em></span> v rytmu pro nastavení BPM.`,
-      `Selektor <span class="hl-gold">Hlas</span> umožňuje vybrat, kdo počítá.`,
-    ],
-  },
-  'sk': {
-    subtitle: "Hovor Takt",
-    tagline: "Metronóm, ktorý počíta nahlas",
-    pressStart: "Stlačte <em>TU</em> pre <em>ŠTART</em>",
-    pressStop: "Stlačte <em>TU</em> pre <em>STOP</em>",
-    tempo: "Tempo",
-    timeSig: "Taktové označenie",
-    subdiv: "Delenie",
-    beatOnly: "Len doba",
-    eighths: "· a ·",
-    sixteenths: "e · a · a",
-    countStyle: "Štýl počítania",
-    allBeats: "Všetky doby",
-    oneOnly: "Len jedna",
-    silent: "Ticho",
-    clickTone: "Zvuk kliknutia",
-    wood: "Drevo",
-    bell: "Zvon",
-    beep: "Pípnutie",
-    rim: "Okraj",
-    soft: "Jemne",
-    screenFlash: "Záblesk obrazovky",
-    flashLabel: "Záblesk na každú dobu",
-    language: "Jazyk",
-    voice: "Hlas",
-    female: "♀ Ženský",
-    male: "♂ Mužský",
-    tapBtn: "Klepnite <em>TU</em> pre nastavenie tempa",
-    speedWarn: (lim) => `Nad ${{lim}} BPM hlas počíta len dobu 1.`,
-    helpTitle: "Ako používať",
-    help: [
-      `Klepnite na <span class="hl-gold">zelený panel</span> alebo stlačte <span class="hl-gold">medzeru</span> pre štart a stop.`,
-      `<span class="hl-blue">Taktové označenie</span> nastavuje počet dôb v takte. Doba 1 je vždy zdôraznená.`,
-      `<span class="hl-pink">Delenie</span> pridáva tiché medzikliknutia — osminové alebo šestnástinové noty.`,
-      `<span class="hl-orange">Štýl počítania</span> riadi čo hlas hovorí. <em>Všetky doby</em> počíta každú. <em>Len jedna</em> volá len prvú. <em>Ticho</em> nechá kliknutia pracovať.`,
-      `<span class="hl-green">Zvuk kliknutia</span> mení zvuk. Vyskúšajte <em>Zvon</em>, <em>Pípnutie</em> alebo <em>Jemne</em>.`,
-      `Klepajte <span class="hl-gold"><em>TU</em></span> v rytme pre nastavenie BPM.`,
-      `Selektor <span class="hl-gold">Hlas</span> umožňuje vybrať, kto počíta.`,
-    ],
-  },
-  'ro': {
-    subtitle: "Spune Ritmul",
-    tagline: "Un metronom care numără cu voce tare",
-    pressStart: "Apasă <em>AICI</em> pentru <em>START</em>",
-    pressStop: "Apasă <em>AICI</em> pentru <em>STOP</em>",
-    tempo: "Tempo",
-    timeSig: "Măsura",
-    subdiv: "Subdiviziune",
-    beatOnly: "Doar bătaie",
-    eighths: "· și ·",
-    sixteenths: "e · și · a",
-    countStyle: "Stil de numărare",
-    allBeats: "Toate bătăile",
-    oneOnly: "Doar unu",
-    silent: "Silențios",
-    clickTone: "Tonul clicului",
-    wood: "Lemn",
-    bell: "Clopot",
-    beep: "Bip",
-    rim: "Margine",
-    soft: "Moale",
-    screenFlash: "Blitz ecran",
-    flashLabel: "Blitz la fiecare bătaie",
-    language: "Limbă",
-    voice: "Voce",
-    female: "♀ Feminin",
-    male: "♂ Masculin",
-    tapBtn: "Apasă <em>AICI</em> pentru a seta tempo",
-    speedWarn: (lim) => `Peste ${{lim}} BPM vocea numără doar bătaia 1.`,
-    helpTitle: "Cum se folosește",
-    help: [
-      `Atinge <span class="hl-gold">panoul verde</span> sau apasă <span class="hl-gold">spațiu</span> pentru a porni și opri.`,
-      `<span class="hl-blue">Măsura</span> stabilește numărul de bătăi pe măsură. Bătaia 1 este întotdeauna accentuată.`,
-      `<span class="hl-pink">Subdiviziunea</span> adaugă clic-uri intermediare liniștite — optimi sau șaisprezecimi.`,
-      `<span class="hl-orange">Stilul de numărare</span> controlează ce spune vocea. <em>Toate bătăile</em> numără fiecare. <em>Doar unu</em> strigă doar prima. <em>Silențios</em> lasă clicurile să lucreze.`,
-      `<span class="hl-green">Tonul clicului</span> schimbă sunetul. Încearcă <em>Clopot</em>, <em>Bip</em> sau <em>Moale</em>.`,
-      `Apasă <span class="hl-gold"><em>AICI</em></span> în ritm pentru a seta BPM.`,
-      `Selectorul de <span class="hl-gold">Voce</span> vă permite să alegeți cine numără.`,
-    ],
-  },
-  'hu': {
-    subtitle: "Mondd az Ütemet",
-    tagline: "Egy metronóm, amely hangosan számol",
-    pressStart: "Nyomja meg <em>ITT</em> az <em>INDÍTÁSHOZ</em>",
-    pressStop: "Nyomja meg <em>ITT</em> a <em>MEGÁLLÁSHOZ</em>",
-    tempo: "Tempó",
-    timeSig: "Ütemjelzés",
-    subdiv: "Felosztás",
-    beatOnly: "Csak ütés",
-    eighths: "· és ·",
-    sixteenths: "e · és · a",
-    countStyle: "Számolási stílus",
-    allBeats: "Minden ütés",
-    oneOnly: "Csak egy",
-    silent: "Csend",
-    clickTone: "Kattintás hangja",
-    wood: "Fa",
-    bell: "Harang",
-    beep: "Síp",
-    rim: "Perem",
-    soft: "Lágy",
-    screenFlash: "Képernyővillantás",
-    flashLabel: "Villantás minden ütemre",
-    language: "Nyelv",
-    voice: "Hang",
-    female: "♀ Nő",
-    male: "♂ Férfi",
-    tapBtn: "Koppints <em>IDE</em> a tempó beállításához",
-    speedWarn: (lim) => `${{lim}} BPM felett a hang csak az 1. ütést számolja.`,
-    helpTitle: "Használati útmutató",
-    help: [
-      `Érintse meg a <span class="hl-gold">zöld panelt</span> vagy nyomja le a <span class="hl-gold">szóközt</span> az indításhoz és megálláshoz.`,
-      `<span class="hl-blue">Ütemjelzés</span> beállítja az ütések számát ütemenkét. Az 1. ütés mindig hangsúlyos.`,
-      `<span class="hl-pink">Felosztás</span> halk köztes kattintásokat ad hozzá — nyolcad vagy tizenhatod hangok.`,
-      `<span class="hl-orange">Számolási stílus</span> vezérli, mit mond a hang. <em>Minden ütés</em> megszámol minden ütést. <em>Csak egy</em> csak az elsőt hívja. <em>Csend</em> hagyja a kattintásokat dolgozni.`,
-      `<span class="hl-green">Kattintás hangja</span> megváltoztatja a hangzást. Próbálja ki a <em>Harangot</em>, a <em>Sípot</em> vagy a <em>Lágyot</em>.`,
-      `Koppintson <span class="hl-gold"><em>IDE</em></span> a ritmusban a BPM beállításához.`,
-      `A <span class="hl-gold">Hang</span> választó lehetővé teszi, hogy kiválassza, ki számol.`,
-    ],
-  },
-  'hr': {
-    subtitle: "Izgovori Takt",
-    tagline: "Metronom koji glasno broji",
-    pressStart: "Pritisnite <em>OVDJE</em> za <em>POČETAK</em>",
-    pressStop: "Pritisnite <em>OVDJE</em> za <em>STOP</em>",
-    tempo: "Tempo",
-    timeSig: "Taktna oznaka",
-    subdiv: "Podjela",
-    beatOnly: "Samo udar",
-    eighths: "· i ·",
-    sixteenths: "e · i · a",
-    countStyle: "Stil brojanja",
-    allBeats: "Svi udari",
-    oneOnly: "Samo jedan",
-    silent: "Tiho",
-    clickTone: "Zvuk klika",
-    wood: "Drvo",
-    bell: "Zvono",
-    beep: "Pisk",
-    rim: "Rub",
-    soft: "Mekano",
-    screenFlash: "Bljesak ekrana",
-    flashLabel: "Bljesak na svaki udar",
-    language: "Jezik",
-    voice: "Glas",
-    female: "♀ Ženski",
-    male: "♂ Muški",
-    tapBtn: "Tapkajte <em>OVDJE</em> za postavljanje tempa",
-    speedWarn: (lim) => `Iznad ${{lim}} BPM glas broji samo udar 1.`,
-    helpTitle: "Kako koristiti",
-    help: [
-      `Dodirnite <span class="hl-gold">zelenu ploču</span> ili pritisnite <span class="hl-gold">razmak</span> za početak i zaustavljanje.`,
-      `<span class="hl-blue">Taktna oznaka</span> postavlja broj udara po taktu. Udar 1 je uvijek naglašen.`,
-      `<span class="hl-pink">Podjela</span> dodaje tihe međuklikove — osmine ili šesnaestine.`,
-      `<span class="hl-orange">Stil brojanja</span> kontrolira što glas govori. <em>Svi udari</em> broji svaki. <em>Samo jedan</em> zove samo prvi. <em>Tiho</em> pušta klikove da rade.`,
-      `<span class="hl-green">Zvuk klika</span> mijenja zvuk. Isprobajte <em>Zvono</em>, <em>Pisk</em> ili <em>Mekano</em>.`,
-      `Tapkajte <span class="hl-gold"><em>OVDJE</em></span> u ritmu za postavljanje BPM-a.`,
-      `Odabir <span class="hl-gold">Glasa</span> omogućuje vam odabir tko broji.`,
-    ],
-  },
-  'el': {
-    subtitle: "Μίλα τον Ρυθμό",
-    tagline: "Ένα μετρονόμο που μετράει φωναχτά",
-    pressStart: "Πατήστε <em>ΕΔΩ</em> για <em>ΕΚΚΊΝΗΣΗ</em>",
-    pressStop: "Πατήστε <em>ΕΔΩ</em> για <em>ΔΙΑΚΟΠΉ</em>",
-    tempo: "Τέμπο",
-    timeSig: "Τακτ",
-    subdiv: "Υποδιαίρεση",
-    beatOnly: "Μόνο χτύπος",
-    eighths: "· και ·",
-    sixteenths: "e · και · a",
-    countStyle: "Στυλ μέτρησης",
-    allBeats: "Όλοι οι χτύποι",
-    oneOnly: "Μόνο ένας",
-    silent: "Σιωπή",
-    clickTone: "Ήχος κλικ",
-    wood: "Ξύλο",
-    bell: "Καμπάνα",
-    beep: "Μπιπ",
-    rim: "Χείλος",
-    soft: "Απαλό",
-    screenFlash: "Αναλαμπή οθόνης",
-    flashLabel: "Αναλαμπή σε κάθε χτύπο",
-    language: "Γλώσσα",
-    voice: "Φωνή",
-    female: "♀ Γυναικεία",
-    male: "♂ Ανδρική",
-    tapBtn: "Αγγίξτε <em>ΕΔΩ</em> για ρύθμιση τέμπο",
-    speedWarn: (lim) => `Πάνω από ${{lim}} BPM η φωνή μετράει μόνο χτύπο 1.`,
-    helpTitle: "Οδηγίες χρήσης",
-    help: [
-      `Αγγίξτε τον <span class="hl-gold">πράσινο πίνακα</span> ή πατήστε <span class="hl-gold">κενό</span> για εκκίνηση και διακοπή.`,
-      `<span class="hl-blue">Τακτ</span> ορίζει τον αριθμό χτύπων ανά τακτ. Ο χτύπος 1 είναι πάντα τονισμένος.`,
-      `<span class="hl-pink">Υποδιαίρεση</span> προσθέτει ήσυχα ενδιάμεσα κλικ — ογδόους ή δέκατους έκτους.`,
-      `<span class="hl-orange">Στυλ μέτρησης</span> ελέγχει τι λέει η φωνή. <em>Όλοι οι χτύποι</em> μετράει κάθε χτύπο. <em>Μόνο ένας</em> καλεί μόνο τον πρώτο. <em>Σιωπή</em> αφήνει τα κλικ να λειτουργούν.`,
-      `<span class="hl-green">Ήχος κλικ</span> αλλάζει τον ήχο. Δοκιμάστε <em>Καμπάνα</em>, <em>Μπιπ</em> ή <em>Απαλό</em>.`,
-      `Αγγίξτε <span class="hl-gold"><em>ΕΔΩ</em></span> στον ρυθμό για ρύθμιση BPM.`,
-      `Ο επιλογέας <span class="hl-gold">Φωνή</span> σας επιτρέπει να επιλέξετε ποιος μετράει.`,
-    ],
-  },
-  'tr': {
-    subtitle: "Ritmi Söyle",
-    tagline: "Yüksek sesle sayan bir metronom",
-    pressStart: "<em>BURAYA</em> bas <em>BAŞLAT</em>",
-    pressStop: "<em>BURAYA</em> bas <em>DURDUR</em>",
-    tempo: "Tempo",
-    timeSig: "Ritim İmzası",
-    subdiv: "Alt Bölüm",
-    beatOnly: "Sadece vuruş",
-    eighths: "· ve ·",
-    sixteenths: "e · ve · a",
-    countStyle: "Sayım Stili",
-    allBeats: "Tüm vuruşlar",
-    oneOnly: "Sadece bir",
-    silent: "Sessiz",
-    clickTone: "Tık Tonu",
-    wood: "Ahşap",
-    bell: "Zil",
-    beep: "Bip",
-    rim: "Kenar",
-    soft: "Yumuşak",
-    screenFlash: "Ekran Flaşı",
-    flashLabel: "Her vuruşta flaş",
-    language: "Dil",
-    voice: "Ses",
-    female: "♀ Kadın",
-    male: "♂ Erkek",
-    tapBtn: "Tempo ayarlamak için <em>BURAYA</em> dokun",
-    speedWarn: (lim) => `${{lim}} BPM üzerinde ses sadece 1. vuruşu sayar.`,
-    helpTitle: "Nasıl kullanılır",
-    help: [
-      `<span class="hl-gold">Yeşil panele</span> dokunun veya başlatmak ve durdurmak için <span class="hl-gold">boşluk</span> tuşuna basın.`,
-      `<span class="hl-blue">Ritim İmzası</span> her ölçüdeki vuruş sayısını ayarlar. 1. vuruş her zaman vurgulanan.`,
-      `<span class="hl-pink">Alt Bölüm</span> sessiz ara tıklamalar ekler — sekizlik veya on altılık notalar.`,
-      `<span class="hl-orange">Sayım Stili</span> sesin ne söylediğini kontrol eder. <em>Tüm vuruşlar</em> her vuruşu sayar. <em>Sadece bir</em> yalnızca ilk vuruşu çağırır. <em>Sessiz</em> tıklamaların çalışmasına izin verir.`,
-      `<span class="hl-green">Tık Tonu</span> sesi değiştirir. <em>Zil</em>, <em>Bip</em> veya <em>Yumuşak</em> deneyin.`,
-      `BPM ayarlamak için ritimde <span class="hl-gold"><em>BURAYA</em></span> dokunun.`,
-      `<span class="hl-gold">Ses</span> seçici kimin saydığını seçmenizi sağlar.`,
-    ],
-  },
-  'he': {
-    subtitle: "אמור את הקצב",
-    tagline: "מטרונום שסופר בקול רם",
-    pressStart: "לחץ <em>כאן</em> <em>להתחיל</em>",
-    pressStop: "לחץ <em>כאן</em> <em>לעצור</em>",
-    tempo: "טמפו",
-    timeSig: "חתימת זמן",
-    subdiv: "תת-חלוקה",
-    beatOnly: "פעימה בלבד",
-    eighths: "· ו ·",
-    sixteenths: "e · ו · a",
-    countStyle: "סגנון ספירה",
-    allBeats: "כל הפעימות",
-    oneOnly: "אחת בלבד",
-    silent: "שקט",
-    clickTone: "צליל קליק",
-    wood: "עץ",
-    bell: "פעמון",
-    beep: "צפצוף",
-    rim: "שפה",
-    soft: "רך",
-    screenFlash: "הבזק מסך",
-    flashLabel: "הבזק בכל פעימה",
-    language: "שפה",
-    voice: "קול",
-    female: "♀ נקבה",
-    male: "♂ זכר",
-    tapBtn: "הקש <em>כאן</em> להגדרת הטמפו",
-    speedWarn: (lim) => `מעל ${{lim}} BPM הקול סופר רק פעימה 1.`,
-    helpTitle: "איך להשתמש",
-    help: [
-      `הקש על <span class="hl-gold">הלוח הירוק</span> או לחץ <span class="hl-gold">רווח</span> להתחלה ועצירה.`,
-      `<span class="hl-blue">חתימת זמן</span> קובעת את מספר הפעימות בכל תיבה. פעימה 1 תמיד מוטעמת.`,
-      `<span class="hl-pink">תת-חלוקה</span> מוסיפה קליקים ביניים שקטים — שמיניות או שש-עשיריות.`,
-      `<span class="hl-orange">סגנון ספירה</span> שולט במה שהקול אומר. <em>כל הפעימות</em> סופר כל פעימה. <em>אחת בלבד</em> קורא רק לראשונה. <em>שקט</em> מניח לקליקים לעבוד.`,
-      `<span class="hl-green">צליל קליק</span> משנה את הצליל. נסה <em>פעמון</em>, <em>צפצוף</em> או <em>רך</em>.`,
-      `הקש <span class="hl-gold"><em>כאן</em></span> בקצב להגדרת BPM.`,
-      `בורר <span class="hl-gold">הקול</span> מאפשר לך לבחור מי סופר.`,
-    ],
-  },
-  'hi': {
-    subtitle: "बोलो बीट",
-    tagline: "एक मेट्रोनोम जो ज़ोर से गिनता है",
-    pressStart: "<em>यहाँ</em> दबाएँ <em>शुरू</em> करें",
-    pressStop: "<em>यहाँ</em> दबाएँ <em>रोकें</em>",
-    tempo: "टेम्पो",
-    timeSig: "ताल चिह्न",
-    subdiv: "उपविभाजन",
-    beatOnly: "केवल बीट",
-    eighths: "· और ·",
-    sixteenths: "e · और · a",
-    countStyle: "गिनती शैली",
-    allBeats: "सभी बीट",
-    oneOnly: "केवल एक",
-    silent: "मौन",
-    clickTone: "क्लिक टोन",
-    wood: "लकड़ी",
-    bell: "घंटी",
-    beep: "बीप",
-    rim: "किनारा",
-    soft: "नरम",
-    screenFlash: "स्क्रीन फ्लैश",
-    flashLabel: "प्रत्येक बीट पर फ्लैश",
-    language: "भाषा",
-    voice: "आवाज़",
-    female: "♀ महिला",
-    male: "♂ पुरुष",
-    tapBtn: "टेम्पो सेट करने के लिए <em>यहाँ</em> टैप करें",
-    speedWarn: (lim) => `${{lim}} BPM से ऊपर, आवाज़ केवल बीट 1 गिनती है।`,
-    helpTitle: "उपयोग कैसे करें",
-    help: [
-      `<span class="hl-gold">हरे पैनल</span> को टैप करें या शुरू और रोकने के लिए <span class="hl-gold">स्पेसबार</span> दबाएँ।`,
-      `<span class="hl-blue">ताल चिह्न</span> प्रत्येक बार में बीट की संख्या सेट करता है। बीट 1 हमेशा उच्चारित होती है।`,
-      `<span class="hl-pink">उपविभाजन</span> बीच में शांत क्लिक जोड़ता है — आठवीं या सोलहवीं नोट।`,
-      `<span class="hl-orange">गिनती शैली</span> नियंत्रित करती है कि आवाज़ क्या कहती है। <em>सभी बीट</em> हर बीट गिनती है। <em>केवल एक</em> पहली बीट बुलाती है। <em>मौन</em> क्लिक को काम करने देता है।`,
-      `<span class="hl-green">क्लिक टोन</span> ध्वनि बदलता है। <em>घंटी</em>, <em>बीप</em> या <em>नरम</em> आज़माएँ।`,
-      `BPM सेट करने के लिए <span class="hl-gold"><em>यहाँ</em></span> ताल में टैप करें।`,
-      `<span class="hl-gold">आवाज़</span> चयनकर्ता आपको चुनने देता है कि कौन गिनता है।`,
-    ],
-  },
-  'id': {
-    subtitle: "Ucapkan Irama",
-    tagline: "Metronom yang menghitung keras",
-    pressStart: "Tekan <em>SINI</em> untuk <em>MULAI</em>",
-    pressStop: "Tekan <em>SINI</em> untuk <em>BERHENTI</em>",
-    tempo: "Tempo",
-    timeSig: "Tanda Birama",
-    subdiv: "Subdivisi",
-    beatOnly: "Hanya ketukan",
-    eighths: "· dan ·",
-    sixteenths: "e · dan · a",
-    countStyle: "Gaya Hitungan",
-    allBeats: "Semua ketukan",
-    oneOnly: "Hanya satu",
-    silent: "Senyap",
-    clickTone: "Nada Klik",
-    wood: "Kayu",
-    bell: "Bel",
-    beep: "Bip",
-    rim: "Tepi",
-    soft: "Lembut",
-    screenFlash: "Kilat Layar",
-    flashLabel: "Kilat setiap ketukan",
-    language: "Bahasa",
-    voice: "Suara",
-    female: "♀ Perempuan",
-    male: "♂ Laki-laki",
-    tapBtn: "Ketuk <em>SINI</em> untuk mengatur tempo",
-    speedWarn: (lim) => `Di atas ${{lim}} BPM, suara hanya menghitung ketukan 1.`,
-    helpTitle: "Cara menggunakan",
-    help: [
-      `Ketuk <span class="hl-gold">panel hijau</span> atau tekan <span class="hl-gold">spasi</span> untuk mulai dan berhenti.`,
-      `<span class="hl-blue">Tanda Birama</span> mengatur jumlah ketukan per birama. Ketukan 1 selalu ditekankan.`,
-      `<span class="hl-pink">Subdivisi</span> menambahkan klik perantara yang tenang — not seperdelapan atau enam belas.`,
-      `<span class="hl-orange">Gaya Hitungan</span> mengontrol apa yang dikatakan suara. <em>Semua ketukan</em> menghitung setiap ketukan. <em>Hanya satu</em> memanggil hanya yang pertama. <em>Senyap</em> membiarkan klik bekerja.`,
-      `<span class="hl-green">Nada Klik</span> mengubah suara. Coba <em>Bel</em>, <em>Bip</em> atau <em>Lembut</em>.`,
-      `Ketuk <span class="hl-gold"><em>SINI</em></span> mengikuti irama untuk mengatur BPM.`,
-      `Pemilih <span class="hl-gold">Suara</span> memungkinkan Anda memilih siapa yang menghitung.`,
-    ],
-  },
-  'ms': {
-    subtitle: "Sebut Irama",
-    tagline: "Metronom yang mengira dengan kuat",
-    pressStart: "Tekan <em>SINI</em> untuk <em>MULA</em>",
-    pressStop: "Tekan <em>SINI</em> untuk <em>BERHENTI</em>",
-    tempo: "Tempo",
-    timeSig: "Tanda Masa",
-    subdiv: "Pembahagian",
-    beatOnly: "Rentak sahaja",
-    eighths: "· dan ·",
-    sixteenths: "e · dan · a",
-    countStyle: "Gaya Kiraan",
-    allBeats: "Semua rentak",
-    oneOnly: "Satu sahaja",
-    silent: "Senyap",
-    clickTone: "Nada Klik",
-    wood: "Kayu",
-    bell: "Loceng",
-    beep: "Bip",
-    rim: "Tepi",
-    soft: "Lembut",
-    screenFlash: "Denyar Skrin",
-    flashLabel: "Denyar setiap rentak",
-    language: "Bahasa",
-    voice: "Suara",
-    female: "♀ Wanita",
-    male: "♂ Lelaki",
-    tapBtn: "Ketuk <em>SINI</em> untuk tetapkan tempo",
-    speedWarn: (lim) => `Melebihi ${{lim}} BPM, suara mengira rentak 1 sahaja.`,
-    helpTitle: "Cara penggunaan",
-    help: [
-      `Ketuk <span class="hl-gold">panel hijau</span> atau tekan <span class="hl-gold">ruang</span> untuk mula dan berhenti.`,
-      `<span class="hl-blue">Tanda Masa</span> menetapkan bilangan rentak setiap bar. Rentak 1 sentiasa ditekankan.`,
-      `<span class="hl-pink">Pembahagian</span> menambah klik perantara yang senyap — not lapan atau enam belas.`,
-      `<span class="hl-orange">Gaya Kiraan</span> mengawal apa yang dikatakan suara. <em>Semua rentak</em> mengira setiap rentak. <em>Satu sahaja</em> memanggil yang pertama sahaja. <em>Senyap</em> membiarkan klik bekerja.`,
-      `<span class="hl-green">Nada Klik</span> mengubah bunyi. Cuba <em>Loceng</em>, <em>Bip</em> atau <em>Lembut</em>.`,
-      `Ketuk <span class="hl-gold"><em>SINI</em></span> mengikut irama untuk menetapkan BPM.`,
-      `Pemilih <span class="hl-gold">Suara</span> membolehkan anda memilih siapa yang mengira.`,
-    ],
-  },
-  'th': {
-    subtitle: "พูดจังหวะ",
-    tagline: "เมตรอนอมที่นับดังๆ",
-    pressStart: "กด<em>ที่นี่</em>เพื่อ<em>เริ่ม</em>",
-    pressStop: "กด<em>ที่นี่</em>เพื่อ<em>หยุด</em>",
-    tempo: "เทมโป",
-    timeSig: "เครื่องหมายจังหวะ",
-    subdiv: "การแบ่งย่อย",
-    beatOnly: "แค่จังหวะ",
-    eighths: "· และ ·",
-    sixteenths: "e · และ · a",
-    countStyle: "รูปแบบการนับ",
-    allBeats: "ทุกจังหวะ",
-    oneOnly: "แค่หนึ่ง",
-    silent: "เงียบ",
-    clickTone: "เสียงคลิก",
-    wood: "ไม้",
-    bell: "กระดิ่ง",
-    beep: "บีป",
-    rim: "ขอบ",
-    soft: "นุ่ม",
-    screenFlash: "แฟลชหน้าจอ",
-    flashLabel: "แฟลชทุกจังหวะ",
-    language: "ภาษา",
-    voice: "เสียง",
-    female: "♀ หญิง",
-    male: "♂ ชาย",
-    tapBtn: "แตะ <em>ที่นี่</em> เพื่อตั้งเทมโป",
-    speedWarn: (lim) => `เกิน ${{lim}} BPM เสียงจะนับแค่จังหวะ 1`,
-    helpTitle: "วิธีใช้",
-    help: [
-      `แตะ <span class="hl-gold">แผงสีเขียว</span> หรือกด <span class="hl-gold">สเปซบาร์</span> เพื่อเริ่มและหยุด`,
-      `<span class="hl-blue">เครื่องหมายจังหวะ</span> กำหนดจำนวนจังหวะต่อบาร์ จังหวะ 1 เน้นเสมอ`,
-      `<span class="hl-pink">การแบ่งย่อย</span> เพิ่มคลิกเบาๆ ระหว่างจังหวะ — โน้ตอ้อมแปดหรือสิบหก`,
-      `<span class="hl-orange">รูปแบบการนับ</span> ควบคุมสิ่งที่เสียงพูด <em>ทุกจังหวะ</em> นับทุกจังหวะ <em>แค่หนึ่ง</em> เรียกแค่จังหวะแรก <em>เงียบ</em> ปล่อยให้คลิกทำงาน`,
-      `<span class="hl-green">เสียงคลิก</span> เปลี่ยนเสียง ลอง <em>กระดิ่ง</em> <em>บีป</em> หรือ <em>นุ่ม</em>`,
-      `แตะ <span class="hl-gold"><em>ที่นี่</em></span> ตามจังหวะเพื่อตั้ง BPM`,
-      `ตัวเลือก <span class="hl-gold">เสียง</span> ให้คุณเลือกว่าใครนับ`,
-    ],
-  },
-  'vi': {
-    subtitle: "Nói Nhịp Điệu",
-    tagline: "Máy đập nhịp đếm to",
-    pressStart: "Nhấn <em>ĐÂY</em> để <em>BẮT ĐẦU</em>",
-    pressStop: "Nhấn <em>ĐÂY</em> để <em>DỪNG</em>",
-    tempo: "Nhịp độ",
-    timeSig: "Nhịp",
-    subdiv: "Phân nhịp",
-    beatOnly: "Chỉ phách",
-    eighths: "· và ·",
-    sixteenths: "e · và · a",
-    countStyle: "Kiểu đếm",
-    allBeats: "Tất cả phách",
-    oneOnly: "Chỉ một",
-    silent: "Im lặng",
-    clickTone: "Âm click",
-    wood: "Gỗ",
-    bell: "Chuông",
-    beep: "Bíp",
-    rim: "Vành",
-    soft: "Nhẹ",
-    screenFlash: "Nhấp nháy màn hình",
-    flashLabel: "Nhấp nháy mỗi phách",
-    language: "Ngôn ngữ",
-    voice: "Giọng",
-    female: "♀ Nữ",
-    male: "♂ Nam",
-    tapBtn: "Chạm <em>ĐÂY</em> để đặt nhịp độ",
-    speedWarn: (lim) => `Trên ${{lim}} BPM, giọng chỉ đếm phách 1.`,
-    helpTitle: "Cách sử dụng",
-    help: [
-      `Chạm vào <span class="hl-gold">bảng xanh</span> hoặc nhấn <span class="hl-gold">dấu cách</span> để bắt đầu và dừng.`,
-      `<span class="hl-blue">Nhịp</span> đặt số phách mỗi ô nhịp. Phách 1 luôn được nhấn mạnh.`,
-      `<span class="hl-pink">Phân nhịp</span> thêm click nhẹ giữa các phách — nốt móc đơn hoặc móc kép.`,
-      `<span class="hl-orange">Kiểu đếm</span> kiểm soát giọng nói. <em>Tất cả phách</em> đếm mỗi phách. <em>Chỉ một</em> chỉ gọi phách đầu. <em>Im lặng</em> để click làm việc.`,
-      `<span class="hl-green">Âm click</span> thay đổi âm thanh. Thử <em>Chuông</em>, <em>Bíp</em> hoặc <em>Nhẹ</em>.`,
-      `Chạm <span class="hl-gold"><em>ĐÂY</em></span> theo nhịp để đặt BPM.`,
-      `Bộ chọn <span class="hl-gold">Giọng</span> cho phép bạn chọn ai đếm.`,
-    ],
-  },
-  'uk': {
-    subtitle: "Говори в Ритм",
-    tagline: "Метроном, який рахує вголос",
-    pressStart: "Натисніть <em>ТУТ</em> для <em>СТАРТУ</em>",
-    pressStop: "Натисніть <em>ТУТ</em> для <em>СТОПУ</em>",
-    tempo: "Темп",
-    timeSig: "Розмір",
-    subdiv: "Ділення",
-    beatOnly: "Тільки удар",
-    eighths: "· і ·",
-    sixteenths: "e · і · a",
-    countStyle: "Стиль рахунку",
-    allBeats: "Усі удари",
-    oneOnly: "Тільки раз",
-    silent: "Тихо",
-    clickTone: "Звук кліку",
-    wood: "Дерево",
-    bell: "Дзвін",
-    beep: "Сигнал",
-    rim: "Обід",
-    soft: "М'яко",
-    screenFlash: "Спалах екрану",
-    flashLabel: "Спалах на кожен удар",
-    language: "Мова",
-    voice: "Голос",
-    female: "♀ Жіночий",
-    male: "♂ Чоловічий",
-    tapBtn: "Натисніть <em>ТУТ</em> для встановлення темпу",
-    speedWarn: (lim) => `Вище ${{lim}} BPM голос рахує тільки удар 1.`,
-    helpTitle: "Як користуватись",
-    help: [
-      `Натисніть <span class="hl-gold">зелену панель</span> або клавішу <span class="hl-gold">пробіл</span> для старту і стопу.`,
-      `<span class="hl-blue">Розмір</span> задає кількість ударів у такті. Удар 1 завжди акцентований.`,
-      `<span class="hl-pink">Ділення</span> додає тихі проміжні кліки — восьмі або шістнадцяті.`,
-      `<span class="hl-orange">Стиль рахунку</span> керує голосом. <em>Усі удари</em> рахує кожен. <em>Тільки раз</em> називає тільки перший. <em>Тихо</em> — працюють тільки кліки.`,
-      `<span class="hl-green">Звук кліку</span> змінює тембр. Спробуйте <em>Дзвін</em>, <em>Сигнал</em> або <em>М'яко</em>.`,
-      `Натискайте <span class="hl-gold"><em>ТУТ</em></span> в ритмі для встановлення темпу.`,
-      `Селектор <span class="hl-gold">Голос</span> дозволяє вибрати, хто рахує.`,
-    ],
-  },
-  'zh-TW': {
-    subtitle: "說出節拍",
-    tagline: "一個大聲計數的節拍器",
-    pressStart: "點擊<em>這裡</em><em>開始</em>",
-    pressStop: "點擊<em>這裡</em><em>停止</em>",
-    tempo: "速度",
-    timeSig: "拍號",
-    subdiv: "細分",
-    beatOnly: "僅拍子",
-    eighths: "· 和 ·",
-    sixteenths: "e · 和 · a",
-    countStyle: "計數方式",
-    allBeats: "每拍",
-    oneOnly: "僅一拍",
-    silent: "靜音",
-    clickTone: "點擊音",
-    wood: "木聲",
-    bell: "鈴聲",
-    beep: "蜂鳴",
-    rim: "邊緣",
-    soft: "柔和",
-    screenFlash: "螢幕閃光",
-    flashLabel: "每拍閃光",
-    language: "語言",
-    voice: "語音",
-    female: "♀ 女聲",
-    male: "♂ 男聲",
-    tapBtn: "點擊<em>這裡</em>設置速度",
-    speedWarn: (lim) => `超過${{lim}} BPM時，語音僅計第1拍。`,
-    helpTitle: "使用說明",
-    help: [
-      `點擊<span class="hl-gold">綠色面板</span>或按<span class="hl-gold">空格鍵</span>開始和停止。`,
-      `<span class="hl-blue">拍號</span>設定每小節的拍數。第1拍總是有重音。`,
-      `<span class="hl-pink">細分</span>添加安靜的中間點擊——八分音符或十六分音符。`,
-      `<span class="hl-orange">計數方式</span>控制語音說什麼。<em>每拍</em>計每一拍。<em>僅一拍</em>只喊第一拍。<em>靜音</em>讓點擊聲完成工作。`,
-      `<span class="hl-green">點擊音</span>改變點擊的聲音。試試<em>鈴聲</em>、<em>蜂鳴</em>或<em>柔和</em>。`,
-      `點擊<span class="hl-gold"><em>這裡</em>設置速度</span>——按節拍反覆點擊以調整BPM。`,
-      `<span class="hl-gold">語音</span>選擇器讓您選擇誰來計數。切換語言可更改語音庫。`,
-    ],
-  },
-};
-// Merge into T
-Object.assign(T, T_EXTRA);
-// Any still-missing langs fall back to English
-LANGS.forEach(l => { if(!T[l.code]) T[l.code] = T.en; });
-
-let uiLang = 'en';
-
-function applyLang(code){
-  try {
-    uiLang = code;
-    const t = T[code] || T.en;
-    // Update all data-i18n elements
-    document.querySelectorAll('[data-i18n]').forEach(el => {
-      try {
-        const key = el.dataset.i18n;
-        if(key === 'tapBtn'){ el.innerHTML = t.tapBtn || ''; return; }
-        if(key === 'pressStart'){ if(!running) el.innerHTML = t.pressStart || ''; return; }
-        if(t[key] !== undefined) el.textContent = t[key];
-      } catch(inner){ console.warn('i18n element error:', inner); }
-    });
-    // Help paragraphs
-    document.querySelectorAll('#help-card p[data-help]').forEach((p, i) => {
-      try { if(t.help && t.help[i]) p.innerHTML = t.help[i]; } catch(e){}
-    });
-    // Help title — guard against null
-    const h2 = document.querySelector('#help-card h2');
-    if(h2 && t.helpTitle) h2.textContent = t.helpTitle;
-    // Speed warning
-    try {
-      const notice = document.getElementById('speed-notice');
-      if(notice) notice.textContent = (bpm > SPEED_LIMIT && t.speedWarn) ? t.speedWarn(SPEED_LIMIT) : '';
-    } catch(e){}
-    // Update press hint immediately for current state
-    try {
-      const hint = document.getElementById('press-hint');
-      if(hint) hint.innerHTML  = running ? (t.pressStop||'') : (t.pressStart||'');
-    } catch(e){}
-    // Voices
-    countLang = code.split('-')[0];
-    try { populateVoices(); } catch(e){ console.warn('populateVoices error:', e); }
-  } catch(e){ showErr('applyLang('+code+'): '+e.message); }
-}
-
-// Spoken count: digits are universal — every voice pronounces them in its own language
-let countLang = 'en';
-function beatWord(n){ return String(n); }
-
-// ── Gender hints for known voices ──
-const GENDER_HINTS = {
-  female: [
-    // English
-    'Samantha','Karen','Moira','Tessa','Fiona','Victoria','Allison','Ava','Susan',
-    'Zira','Hazel','Catherine','Alice','Agnes','Vicki','Kathy','Nicky','Grandma',
-    'Google US English','Google UK English Female','Microsoft Zira','Microsoft Hazel',
-    'Microsoft Susan','Microsoft Catherine',
-    // French
-    'Amelie','Aurelie','Julie','Marie','Audrey',
-    // German
-    'Anna','Petra','Yannick',
-    // Italian
-    'Alice','Federica','Luca',
-    // Spanish
-    'Monica','Paulina','Marisol','Conchita','Lucia',
-    // Japanese
-    'Kyoko','O-ren',
-    // Portuguese
-    'Luciana','Joana',
-    // Dutch
-    'Xander',
-    // Chinese
-    'Ting-Ting','Sin-ji','Mei-Jia',
-    // Korean
-    'Yuna','Sora',
-    // Arabic
-    'Laila','Maged',
-    // Russian
-    'Milena','Yuri',
-    // Swedish
-    'Alva','Klara',
-    // Norwegian
-    'Nora',
-    // Danish
-    'Sara','Ida',
-    // Finnish
-    'Satu',
-    // Polish
-    'Zosia','Ewa',
-    // Turkish
-    'Yelda',
-    // Greek
-    'Melina',
-    // Hindi
-    'Lekha',
-    // Thai
-    'Kanya',
-    // Vietnamese
-    'Linh',
-  ],
-  male: [
-    // English
-    'Daniel','Alex','Rishi','Tom','Fred','Bruce',
-    'Google UK English Male','Microsoft David','Microsoft Mark','Microsoft James',
-    'Microsoft Guy','Microsoft Richard',
-    // French
-    'Thomas','Nicolas','Romain','Jean',
-    // German
-    'Stefan','Markus','Klaus',
-    // Italian
-    'Edoardo','Lorenzo',
-    // Spanish
-    'Diego','Jorge','Juan','Carlos','Enrique',
-    // Japanese
-    'Otoya','Ichiro',
-    // Portuguese
-    'Felipe','Pedro',
-    // Chinese
-    'Sinji','Ting','Eddy','Lili',
-    // Korean
-    'Minho',
-    // Russian
-    'Yuri','Pavel',
-    // Swedish
-    'Oskar','Magnus',
-    // Norwegian
-    'Jonas',
-    // Danish
-    'Magnus',
-    // Finnish
-    'Onni',
-    // Polish
-    'Jakub',
-    // Turkish
-    'Emre',
-    // Arabic
-    'Tarik',
-  ],
-};
-function guessGender(v){
-  const n = v.name;
-  for(const k of GENDER_HINTS.female) if(n.includes(k)) return 'female';
-  for(const k of GENDER_HINTS.male)   if(n.includes(k)) return 'male';
-  return null;
-}
-
-let selectedGender = 'female';
-
-function populateVoices(){
-  const all = window.speechSynthesis.getVoices();
-  const sel = document.getElementById('voice-select');
-  sel.innerHTML = '';
-
-  // Pool: prefer voices matching current language, fall back to English, then all
-  const langPrefix = countLang === 'en' ? 'en' : countLang;
-  let pool = all.filter(v => v.lang.startsWith(langPrefix));
-  if(pool.length === 0) pool = all.filter(v => v.lang.startsWith('en'));
-  if(pool.length === 0) pool = all;
-
-  // Filter by selected gender; if fewer than 2 found, show all pool
-  const gendered = pool.filter(v => guessGender(v) === selectedGender);
-  const list = gendered.length >= 1 ? gendered : pool;
-
-  // Deduplicate: strip quality suffixes, keep first seen
-  const seen = new Set();
-  const deduped = [];
-  // Sort: voices with non-English names in hints first, then others
-  const sorted = [...list].sort((a, b) => {
-    const aHinted = GENDER_HINTS.female.some(h => a.name.includes(h)) ||
-                    GENDER_HINTS.male.some(h => a.name.includes(h));
-    const bHinted = GENDER_HINTS.female.some(h => b.name.includes(h)) ||
-                    GENDER_HINTS.male.some(h => b.name.includes(h));
-    // Prefer voices whose lang exactly matches (not just starts with)
-    const aExact = a.lang.startsWith(countLang);
-    const bExact = b.lang.startsWith(countLang);
-    if(aExact && !bExact) return -1;
-    if(!aExact && bExact) return 1;
-    return 0;
-  });
-  sorted.forEach(v => {
-    const base = v.name.replace(/\s*(compact|premium|enhanced|natural|online)\b/gi,'').trim();
-    if(!seen.has(base)){ seen.add(base); deduped.push({v, base}); }
-  });
-
-  // Exclude joke/effect voices by name
-  const junk = /bahh|bells|boing|bubbles|cellos|deranged|hysterical|organ|trinoids|whisper|zarvox|Albert|Bad News|Bells|Good News|Junior|Ralph/i;
-  const clean = deduped.filter(({v}) => !junk.test(v.name)).slice(0, 8);
-  const final = clean.length > 0 ? clean : deduped.slice(0, 8);
-
-  if(final.length === 0){
-    const def = document.createElement('option');
-    def.value = ''; def.textContent = 'Default voice'; sel.appendChild(def);
-    selectedVoice = null;
-  } else {
-    final.forEach(({v, base}) => {
-      const o = document.createElement('option');
-      o.value = v.name;
-      // Clean display: strip vendor prefix and parenthetical language descriptions
-      let displayName = base
-        .replace(/^(Microsoft|Google) /,'')
-        .replace(/\s*\([^)]*\(\s*[^)]*\)\s*[^)]*\)\s*|\s*\([^)]*\)/g, '')  // strip (lang) parentheticals
-        .trim();
-      const region = v.lang.split('-')[1] ? ' · '+v.lang.split('-')[1] : '';
-      o.textContent = displayName + region;
-      sel.appendChild(o);
-    });
-    selectedVoice = final[0].v;
-    sel.value = final[0].v.name;
-  }
-}
-
-document.getElementById('voice-gender-row').querySelectorAll('.pill').forEach(btn => {
-  btn.addEventListener('click', function(){
-    document.querySelectorAll('#voice-gender-row .pill').forEach(b => b.classList.remove('active'));
-    this.classList.add('active');
-    selectedGender = this.dataset.gender;
-    populateVoices();
-  });
-});
-
-// Language select is populated at init and wired here
-document.getElementById('lang-select').addEventListener('change', function(){
-  applyLang(this.value);
-});
-
-document.getElementById('voice-select').addEventListener('change', function(){
-  // Prefer the stored voice object from populateVoices; fall back to fresh lookup
-  const allV = window.speechSynthesis.getVoices();
-  selectedVoice = allV.find(v => v.name === this.value) || null;
-  if(!selectedVoice) console.warn('Voice not found:', this.value);
-});
-
-// Voices: Safari/iOS loads them async — try immediately, also hook onvoiceschanged
-// Voice loading — belt + suspenders for iOS Safari
-let voicesLoaded = false;
-function tryLoadVoices(){
-  if(voicesLoaded) return;
-  try {
-    const v = window.speechSynthesis.getVoices();
-    if(v && v.length > 0){ voicesLoaded = true; populateVoices(); }
-  } catch(e) { console.warn('getVoices error:', e); }
-}
-// Hook 1: standard event
-try { window.speechSynthesis.onvoiceschanged = function(){ tryLoadVoices(); }; } catch(e){}
-// Hook 2: immediate + delayed polls
-tryLoadVoices();
-setTimeout(tryLoadVoices, 200);
-setTimeout(tryLoadVoices, 600);
-setTimeout(tryLoadVoices, 1500);
-
-// Build language dropdown
+// ── Draggable cue ball in bottom view ───────────────────────
 (function(){
-  const sel = document.getElementById('lang-select');
-  LANGS.forEach(l => {
-    const o = document.createElement('option');
-    o.value = l.code;
-    o.textContent = l.flag + '  ' + l.name;
-    sel.appendChild(o);
-  });
-  sel.value = 'en';
+  var svg = document.getElementById('botsvg');
+  var dragging = false;
+
+  function svgX(e){
+    var rect = svg.getBoundingClientRect();
+    var clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    return (clientX - rect.left) * (460 / rect.width);
+  }
+
+  function xToSlider(x){
+    var rh = window.rightHand === true;
+    var ocx = rh ? (460 - BOT_OCX) : BOT_OCX;
+    // aimFraction = distance from object ball edge to cue ball edge / (2*r)
+    // ccx = rh ? ocx - aimF*2*Rb : ocx + aimF*2*Rb
+    // so aimF = rh ? (ocx-x)/( 2*Rb) : (x-ocx)/(2*Rb)  where x = ccx
+    var aimF = rh ? (ocx - x) / (2*Rb) : (x - ocx) / (2*Rb);
+    aimF = Math.max(0, Math.min(0.9999, aimF));
+    // Convert aimFraction back to slider value: sl-cut = asin(aimF)/(PI/2)*100
+    var angle = Math.asin(aimF);
+    var slVal = Math.round(angle / (Math.PI/2) * 100);
+    return Math.max(0, Math.min(100, slVal));
+  }
+
+  function onStart(e){
+    // Only start drag if touch is near the cue ball
+    var x = svgX(e);
+    var d = compute();
+    var rh = window.rightHand === true;
+    var ocx = rh ? (460 - BOT_OCX) : BOT_OCX;
+    var ccx = rh ? ocx - d.aimFraction*2*Rb : ocx + d.aimFraction*2*Rb;
+    if(Math.abs(x - ccx) < Rb * 1.4){
+      dragging = true;
+      e.preventDefault();
+    }
+  }
+
+  function onMove(e){
+    if(!dragging) return;
+    e.preventDefault();
+    var sl = document.getElementById('sl-cut');
+    sl.value = xToSlider(svgX(e));
+    update();
+  }
+
+  function onEnd(){ dragging = false; }
+
+  svg.addEventListener('touchstart', onStart, {passive:false});
+  svg.addEventListener('touchmove',  onMove,  {passive:false});
+  svg.addEventListener('touchend',   onEnd,   {passive:true});
+  svg.addEventListener('mousedown',  onStart);
+  svg.addEventListener('mousemove',  onMove);
+  svg.addEventListener('mouseup',    onEnd);
+  svg.style.cursor = 'grab';
+  svg.style.touchAction = 'none';
 })();
 
-applyLang('en');
-buildPips();
-updateSpeedNotice();
-
-// Spacebar = toggle start/stop (desktop)
-document.addEventListener('keydown', function(e){
-  if(e.code === 'Space' || e.key === ' '){
-    const tag = e.target.tagName;
-    if(tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
-    e.preventDefault(); // stops button activation AND scroll
-    if(e.target && e.target.blur) e.target.blur(); // release button focus so no double-fire
-    toggleMetronome();
-  }
+// Prevent page scroll while dragging any slider
+document.querySelectorAll('input[type=range]').forEach(function(sl){
+  sl.addEventListener('touchstart', function(e){ e.stopPropagation(); }, {passive:true});
 });
+
+if('serviceWorker' in navigator){
+  var swBlob=new Blob([
+    'self.addEventListener("install",function(e){self.skipWaiting();});'+
+    'self.addEventListener("fetch",function(e){e.respondWith(fetch(e.request).catch(function(){return caches.match(e.request);}));});'
+  ],{type:'application/javascript'});
+  navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(function(){});
+}
 </script>
+<!-- ── Info overlay ─────────────────────────────────────────── -->
+<div id="info-overlay" style="display:none;position:fixed;inset:0;z-index:999;
+     background:#0e260e;overflow-y:auto;flex-direction:column;align-items:center;padding:24px 20px 48px;">
+
+  <!-- Close button -->
+  <div style="width:100%;max-width:600px;display:flex;justify-content:flex-end;margin-bottom:8px;">
+    <button onclick="document.getElementById('info-overlay').style.display='none'"
+      style="width:34px;height:34px;border-radius:50%;
+             border:2px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.08);
+             color:#fff;font-size:18px;cursor:pointer;line-height:1;">✕</button>
+  </div>
+
+  <!-- Header -->
+  <div style="text-align:center;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,0.1);width:100%;max-width:600px;">
+    <h1 style="display:flex;align-items:center;justify-content:center;line-height:1;margin-bottom:6px;">
+      <span style="font-family:'Playfair Display',serif;font-style:italic;font-weight:700;font-size:clamp(16px,4.5vw,24px);color:#f0df70;">LeStar&nbsp;</span>
+      <span style="font-family:'Lato',sans-serif;font-style:italic;font-weight:900;font-size:clamp(30px,8vw,46px);color:#f0df70;line-height:1;margin:0 1px 0 2px;">Z</span>
+      <span style="font-family:'Playfair Display',serif;font-style:italic;font-weight:700;font-size:clamp(16px,4.5vw,24px);color:#f0df70;">'s Aimer</span>
+    </h1>
+    <p style="font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:0.07em;">Reference & Instructions</p>
+  </div>
+
+  <div style="width:100%;max-width:600px;color:rgba(255,255,255,0.85);font-size:14px;line-height:1.75;">
+
+    <!-- HOW TO USE — first and prominent -->
+    <div style="background:rgba(255,255,255,0.07);border-radius:8px;padding:18px 20px;margin-bottom:20px;border:1px solid rgba(240,223,112,0.25);">
+      <div style="font-size:13px;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;color:#f0df70;margin-bottom:14px;">How to Use</div>
+      <ol style="padding-left:20px;margin:0;">
+        <li style="margin-bottom:10px;">Open <em>LeStar Z's Aimer</em> on your phone.</li>
+        <li style="margin-bottom:10px;">Place the phone on or near the playing surface where you can see it easily.</li>
+        <li style="margin-bottom:10px;">Set up a cue ball and an object ball on the table. Start with an easy shot.</li>
+        <li style="margin-bottom:10px;">Note the position of the object ball. Pick it up, and place the phone where it was, with the top graphic over that spot.</li>
+        <li style="margin-bottom:10px;">Make sure the phone is lined up with the line to the cue ball.</li>
+        <li style="margin-bottom:10px;">Move the <strong style="color:#e87030;">Cut Angle</strong> slider until the arrow in the upper graphic points to the pocket or other target.</li>
+        <li style="margin-bottom:10px;">Pick up the phone and put the object ball back on its spot. Then study the lower graphic — it shows you exactly where the inside edge of the cue ball needs to be placed against the object ball to produce that angle.</li>
+        <li style="margin-bottom:10px;">Step up to the shot and align the real cue ball and real object ball the same way the lower graphic shows.</li>
+        <li style="margin-bottom:10px;">Shoot that same setup many times until you build a feel for what that alignment looks like on the table and what it produces.</li>
+        <li style="margin-bottom:0;">Only then begin adding the lower sliders — <strong style="color:#70c0f0;">Speed</strong>, <strong style="color:#e870b0;">Spin</strong>, and <strong style="color:#a0d0a0;">Distance</strong> — one at a time, then in combinations. Go slowly. Each one shifts your aim point, and you want to feel what each one does before combining them. If you are consistently missing on one side or the other, you may want to put a compensation into your estimate of the correct angle through using the <strong style="color:#ddd;">Personal Bias</strong> slider.</li>
+      </ol>
+    </div>
+
+    <!-- The two graphics -->
+    <div style="background:rgba(255,255,255,0.05);border-radius:8px;padding:16px 18px;margin-bottom:18px;border:1px solid rgba(255,255,255,0.08);">
+      <div style="font-size:11px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;color:#f0df70;margin-bottom:10px;">The Two Graphics</div>
+      <p style="margin-bottom:10px;"><strong style="color:#fff;">Bird's Eye (top)</strong> — looking straight down at the table. The red object ball sits fixed on the left; the white cue ball moves to show your contact point as you adjust the cut angle. The arrow shows where the object ball will travel after contact.</p>
+      <p><strong style="color:#fff;">Eye Level (bottom)</strong> — your view from behind the cue ball, chin near the felt. Line <strong style="color:#7fd0f0;">A</strong> runs across the face of the object ball. The tick marks divide it into sixteenths. The orange dashed line marks exactly where the inside edge of the cue ball must be aimed. The percentage badge shows that position as a fraction of the ball's width.</p>
+    </div>
+
+    <!-- Sliders -->
+    <div style="background:rgba(255,255,255,0.05);border-radius:8px;padding:16px 18px;margin-bottom:18px;border:1px solid rgba(255,255,255,0.08);">
+      <div style="font-size:11px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;color:#f0df70;margin-bottom:10px;">The Sliders</div>
+      <p style="margin-bottom:10px;"><strong style="color:#e87030;">Cut Angle</strong> — the direction you want the object ball to travel. Start here. 0° is straight in, 90° is a near-miss. The aim point shown is pure geometry — everything else adjusts on top of it.</p>
+      <p style="margin-bottom:10px;"><strong style="color:#70c0f0;">Speed</strong> — how hard you hit the shot. Slower shots give friction more time to throw the ball off the geometric line. Fast shots reduce throw. Toggle OFF to see what speed alone is contributing.</p>
+      <p style="margin-bottom:10px;"><strong style="color:#e870b0;">Spin</strong> — where the tip contacts the cue ball: left (inside) or right (outside). Side english adds its own throw and also causes squirt. Toggle OFF to isolate its effect.</p>
+      <p><strong style="color:#a0d0a0;">Distance</strong> — how far the cue ball travels to reach the object ball. Squirt from english accumulates over distance. A half-tip barely matters at 6 inches but is significant at 6 feet. Toggle OFF to ignore it.</p>
+      <p style="margin-top:10px;"><strong style="color:#ddd;">Personal Bias</strong> — a correction for your own consistent error. If you find that following the app's aim point always leaves you undercutting the shot, slide Bias toward <em>thinner</em> to add degrees to your aim. If you overcut, slide toward <em>fuller</em>. Start with small adjustments — 2° to 4° — and test on a straight-in shot first, then on cut shots. The goal is not to rely on this forever: use it to build a feel for what the correct contact looks like, then reduce it as your eye improves.</p>
+    </div>
+
+    <!-- Definitions -->
+    <div style="background:rgba(255,255,255,0.05);border-radius:8px;padding:16px 18px;margin-bottom:18px;border:1px solid rgba(255,255,255,0.08);">
+      <div style="font-size:11px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;color:#f0df70;margin-bottom:10px;">Definitions</div>
+      <p style="margin-bottom:10px;"><strong style="color:#fff;">Cut Angle</strong> — the angle between the cue ball's path and the line connecting the two ball centers at contact. 0° is straight in. 30° sends the object ball roughly 30° off to the side.</p>
+      <p style="margin-bottom:10px;"><strong style="color:#fff;">Throw</strong> — friction between the two balls at contact deflects the object ball slightly away from the pure geometric line. It always occurs on cut shots. Slower speed and outside english increase it.</p>
+      <p style="margin-bottom:10px;"><strong style="color:#fff;">Squirt</strong> — when side english is applied, the cue tip pushes the cue ball slightly sideways off its intended path at the moment of contact. The effect grows with distance traveled.</p>
+      <p><strong style="color:#fff;">Spin / English</strong> — side rotation applied to the cue ball by striking left or right of center. Inside english means striking toward the direction of the cut. Outside english means striking away from it.</p>
+    </div>
+
+    <!-- Disclaimer -->
+    <p style="font-size:11px;color:rgba(255,255,255,0.75);text-align:center;line-height:1.6;">
+      All values are approximations based on standard ball friction coefficients and a mid-weight playing cue.<br>Table conditions, tip hardness, and cue weight will affect results.
+    </p>
+
+  </div>
+</div>
+
 </body>
 </html>
