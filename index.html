@@ -129,6 +129,52 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:22px; h
   transition:opacity 0.2s;
 }
 
+/* GO button */
+#go-btn {
+  width:100%; max-width:420px;
+  padding:20px; border-radius:10px; border:none;
+  font-family:'Cormorant Garamond',serif; font-size:32px; font-weight:600;
+  letter-spacing:0.12em;
+  cursor:pointer; transition:all 0.15s;
+  background:rgba(200,48,32,0.18);
+  border:1px solid var(--red);
+  color:var(--red);
+  position:relative; z-index:1;
+  margin-bottom:14px;
+}
+#go-btn:active { background:rgba(200,48,32,0.35); transform:scale(0.98); }
+#go-btn.running {
+  background:rgba(200,48,32,0.28);
+  color:#f08070;
+  border-color:#f08070;
+}
+
+/* Fullscreen button */
+#fs-btn {
+  position:absolute; top:10px; right:10px;
+  width:28px; height:28px; border-radius:50%;
+  border:1px solid var(--border-gold);
+  background:rgba(232,160,48,0.12);
+  color:var(--gold); font-size:13px;
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+  transition:background 0.15s; z-index:10;
+}
+#fs-btn:hover { background:rgba(232,160,48,0.28); }
+
+/* Fullscreen mode — hide everything except beat display */
+body.fs-mode .ctrl-panel,
+body.fs-mode .tap-btn,
+body.fs-mode .hdr,
+body.fs-mode #speed-notice { display:none; }
+body.fs-mode .beat-display {
+  position:fixed; inset:0; border-radius:0;
+  border:none; z-index:50;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+}
+body.fs-mode .beat-num { font-size:clamp(160px,45vw,320px); }
+body.fs-mode #fs-btn { top:16px; right:16px; }
+
 /* Help button */
 #help-btn {
   position:absolute; top:0; left:0;
@@ -361,13 +407,16 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:22px; h
   </div>
 </div>
 
-<div class="beat-display" id="beat-display" onclick="toggleMetronome()" style="cursor:pointer;">
+<div class="beat-display" id="beat-display" onclick="toggleMetronome()" style="cursor:pointer;position:relative;">
+  <button id="fs-btn" onclick="event.stopPropagation();toggleFS()" title="Full screen">⛶</button>
   <div class="pips" id="pips"></div>
   <div class="beat-num" id="beat-num">—</div>
   <div class="beat-word" id="beat-word"></div>
   <div class="subdiv-word" id="subdiv-word"></div>
   <div class="press-hint" id="press-hint" data-i18n="pressStart">Press <em>HERE</em> to <em>START</em></div>
 </div>
+
+<button id="go-btn" onclick="toggleMetronome()">GO!</button>
 
 <div class="controls">
 
@@ -683,6 +732,17 @@ function drawLoop(){
   drawTimer=requestAnimationFrame(drawLoop);
 }
 
+function toggleFS(){
+  const btn = document.getElementById('fs-btn');
+  if(document.body.classList.toggle('fs-mode')){
+    btn.textContent = '✕';
+    btn.title = 'Exit full screen';
+  } else {
+    btn.textContent = '⛶';
+    btn.title = 'Full screen';
+  }
+}
+
 function showErr(e){
   const b=document.getElementById('err-banner');
   b.textContent='Error: '+String(e);
@@ -709,6 +769,7 @@ async function startMetronome(){
   nextBeatTime=audioCtx.currentTime+0.12;
   scheduler(); drawTimer=requestAnimationFrame(drawLoop);
   document.getElementById('press-hint').innerHTML=(T[uiLang]||T.en).pressStop;
+  const goBtn=document.getElementById('go-btn'); if(goBtn) goBtn.classList.add('running');
   document.getElementById('beat-display').classList.add('running');
   document.getElementById('beat-word').textContent='';
 }
@@ -721,7 +782,9 @@ function stopMetronome(){
   document.getElementById('beat-word').textContent='';
   document.querySelectorAll('.pip').forEach(p=>p.classList.remove('active'));
   document.getElementById('press-hint').innerHTML=(T[uiLang]||T.en).pressStart;
+  const goBtn=document.getElementById('go-btn'); if(goBtn) goBtn.classList.remove('running');
   document.getElementById('beat-display').classList.remove('running');
+  if(document.body.classList.contains('fs-mode')) toggleFS();
 }
 
 document.getElementById('sl-bpm').addEventListener('input',function(){
@@ -841,6 +904,7 @@ const T = {
       `<span class="hl-green">Click Tone</span> changes the sound of the click. Try <em>Bell</em> for a chime, <em>Beep</em> for a classic electronic feel, or <em>Soft</em> for quiet practice.`,
       `<span class="hl-gold">Tap <em>HERE</em> to Set Tempo</span> — tap the button repeatedly in time and the BPM will lock to your tapping.`,
       `The <span class="hl-gold">Voice</span> selector lets you choose who counts. Switch language to change the voice pool.`,
+      `The red <span class="hl-gold">GO!</span> button starts and stops. Tap <span class="hl-gold">⛶</span> in the corner of the green panel to enter full-screen mode — just the beat number, filling the screen. Tap <span class="hl-gold">✕</span> or stop to exit.`,
     ],
   },
   es: {
