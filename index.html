@@ -36,7 +36,7 @@ html,body {
   display:flex; flex-direction:column; align-items:center;
   font-family:'Lato',sans-serif;
   color:var(--white);
-  padding:20px 16px 52px;
+  padding:20px 16px 40px;
   background-image:radial-gradient(ellipse at 50% 0%, rgba(26,54,26,0.55) 0%, transparent 68%);
 }
 #flash-overlay {
@@ -132,22 +132,19 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:22px; h
 /* GO button */
 #go-btn {
   width:100%; max-width:420px;
-  padding:20px; border-radius:10px; border:none;
+  padding:22px;
+  border-radius:12px;
+  border:2px solid var(--red);
   font-family:'Cormorant Garamond',serif; font-size:32px; font-weight:600;
   letter-spacing:0.12em;
   cursor:pointer; transition:all 0.15s;
-  background:rgba(200,48,32,0.18);
-  border:1px solid var(--red);
+  background:rgba(200,48,32,0.22);
   color:var(--red);
   position:relative; z-index:1;
-  margin-bottom:14px;
+  margin-top:4px;
+  display:block;
 }
-#go-btn:active { background:rgba(200,48,32,0.35); transform:scale(0.98); }
-#go-btn.running {
-  background:rgba(200,48,32,0.28);
-  color:#f08070;
-  border-color:#f08070;
-}
+#go-btn:active { background:rgba(200,48,32,0.45); transform:scale(0.98); }
 
 /* Fullscreen button */
 #fs-btn {
@@ -165,15 +162,22 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:22px; h
 body.fs-mode .ctrl-panel,
 body.fs-mode .tap-btn,
 body.fs-mode .hdr,
-body.fs-mode #speed-notice { display:none; }
+body.fs-mode #speed-notice,
+body.fs-mode #go-btn { display:none; }
 body.fs-mode .beat-display {
   position:fixed; inset:0; border-radius:0;
   border:none; z-index:50;
   display:flex; flex-direction:column;
   align-items:center; justify-content:center;
+  max-width:100%;
 }
-body.fs-mode .beat-num { font-size:clamp(160px,45vw,320px); }
-body.fs-mode #fs-btn { top:16px; right:16px; }
+body.fs-mode .beat-num { 
+  font-size:clamp(200px,55vw,420px);
+  min-height:0;
+}
+body.fs-mode .pips { margin-bottom:24px; }
+body.fs-mode .press-hint { font-size:clamp(14px,4vw,20px); }
+body.fs-mode #fs-btn { top:20px; right:20px; width:36px; height:36px; font-size:18px; }
 
 /* Help button */
 #help-btn {
@@ -416,8 +420,6 @@ body.fs-mode #fs-btn { top:16px; right:16px; }
   <div class="press-hint" id="press-hint" data-i18n="pressStart">Press <em>HERE</em> to <em>START</em></div>
 </div>
 
-<button id="go-btn" onclick="toggleFS()">GO!</button>
-
 <div class="controls">
 
   <div class="ctrl-panel">
@@ -507,6 +509,8 @@ body.fs-mode #fs-btn { top:16px; right:16px; }
       </label>
     </div>
   </div>
+
+<button id="go-btn" onclick="toggleFS()">GO!</button>
 
 </div>
 
