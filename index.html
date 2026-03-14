@@ -40,7 +40,7 @@ html,body {
   background-image:radial-gradient(ellipse at 50% 0%, rgba(26,54,26,0.55) 0%, transparent 68%);
 }
 #flash-overlay {
-  position:fixed; inset:0; pointer-events:none; z-index:0;
+  position:fixed; inset:0; pointer-events:none; z-index:999;
   background:var(--gold); opacity:0; transition:opacity 0.04s;
 }
 
@@ -685,7 +685,7 @@ function speakBeat(beat){
 function flashScreen(isOne){
   if(!flashEnabled) return;
   const el=document.getElementById('flash-overlay');
-  el.style.opacity=isOne?'0.13':'0.05';
+  el.style.opacity=isOne?'0.35':'0.15';
   setTimeout(()=>{el.style.opacity='0';},80);
 }
 
