@@ -416,7 +416,7 @@ body.fs-mode #fs-btn { top:16px; right:16px; }
   <div class="press-hint" id="press-hint" data-i18n="pressStart">Press <em>HERE</em> to <em>START</em></div>
 </div>
 
-<button id="go-btn" onclick="toggleMetronome()">GO!</button>
+<button id="go-btn" onclick="toggleFS()">GO!</button>
 
 <div class="controls">
 
@@ -769,7 +769,7 @@ async function startMetronome(){
   nextBeatTime=audioCtx.currentTime+0.12;
   scheduler(); drawTimer=requestAnimationFrame(drawLoop);
   document.getElementById('press-hint').innerHTML=(T[uiLang]||T.en).pressStop;
-  const goBtn=document.getElementById('go-btn'); if(goBtn) goBtn.classList.add('running');
+
   document.getElementById('beat-display').classList.add('running');
   document.getElementById('beat-word').textContent='';
 }
@@ -782,7 +782,7 @@ function stopMetronome(){
   document.getElementById('beat-word').textContent='';
   document.querySelectorAll('.pip').forEach(p=>p.classList.remove('active'));
   document.getElementById('press-hint').innerHTML=(T[uiLang]||T.en).pressStart;
-  const goBtn=document.getElementById('go-btn'); if(goBtn) goBtn.classList.remove('running');
+
   document.getElementById('beat-display').classList.remove('running');
   if(document.body.classList.contains('fs-mode')) toggleFS();
 }
@@ -904,7 +904,7 @@ const T = {
       `<span class="hl-green">Click Tone</span> changes the sound of the click. Try <em>Bell</em> for a chime, <em>Beep</em> for a classic electronic feel, or <em>Soft</em> for quiet practice.`,
       `<span class="hl-gold">Tap <em>HERE</em> to Set Tempo</span> — tap the button repeatedly in time and the BPM will lock to your tapping.`,
       `The <span class="hl-gold">Voice</span> selector lets you choose who counts. Switch language to change the voice pool.`,
-      `The red <span class="hl-gold">GO!</span> button starts and stops. Tap <span class="hl-gold">⛶</span> in the corner of the green panel to enter full-screen mode — just the beat number, filling the screen. Tap <span class="hl-gold">✕</span> or stop to exit.`,
+      `The red <span class="hl-gold">GO!</span> button at the bottom enters full-screen mode — the beat number fills the entire screen, ideal for performance. Tap <span class="hl-gold">✕</span> in the corner or stop the metronome to exit full screen.`,
     ],
   },
   es: {
