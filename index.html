@@ -477,11 +477,12 @@ window.addEventListener('load',update);
 
 // ── Draggable cue ball in bottom view ───────────────────────
 (function(){
-  var svg = document.getElementById('botsvg');
+  var wrap = document.querySelector('.svg-box.bot-box');
+  var svg  = document.getElementById('botsvg');
   var dragging = false;
 
   function svgX(e){
-    var rect = svg.getBoundingClientRect();
+    var rect = wrap.getBoundingClientRect();
     var clientX = e.touches ? e.touches[0].clientX : e.clientX;
     return (clientX - rect.left) * (460 / rect.width);
   }
@@ -489,48 +490,56 @@ window.addEventListener('load',update);
   function xToSlider(x){
     var rh = window.rightHand === true;
     var ocx = rh ? (460 - BOT_OCX) : BOT_OCX;
-    // aimFraction = distance from object ball edge to cue ball edge / (2*r)
-    // ccx = rh ? ocx - aimF*2*Rb : ocx + aimF*2*Rb
-    // so aimF = rh ? (ocx-x)/( 2*Rb) : (x-ocx)/(2*Rb)  where x = ccx
     var aimF = rh ? (ocx - x) / (2*Rb) : (x - ocx) / (2*Rb);
     aimF = Math.max(0, Math.min(0.9999, aimF));
-    // Convert aimFraction back to slider value: sl-cut = asin(aimF)/(PI/2)*100
     var angle = Math.asin(aimF);
     var slVal = Math.round(angle / (Math.PI/2) * 100);
     return Math.max(0, Math.min(100, slVal));
   }
 
-  function onStart(e){
-    // Only start drag if touch is near the cue ball
-    var x = svgX(e);
+  function nearBall(x){
     var d = compute();
     var rh = window.rightHand === true;
     var ocx = rh ? (460 - BOT_OCX) : BOT_OCX;
     var ccx = rh ? ocx - d.aimFraction*2*Rb : ocx + d.aimFraction*2*Rb;
-    if(Math.abs(x - ccx) < Rb * 1.4){
+    return Math.abs(x - ccx) < Rb * 2.0;
+  }
+
+  // Attach to the wrapper div — sits above SVG in hit-testing
+  wrap.style.touchAction = 'none';
+  wrap.style.cursor = 'grab';
+
+  wrap.addEventListener('touchstart', function(e){
+    var x = svgX(e);
+    if(nearBall(x)){
       dragging = true;
       e.preventDefault();
+      e.stopPropagation();
     }
-  }
+  }, {passive:false});
 
-  function onMove(e){
+  wrap.addEventListener('touchmove', function(e){
     if(!dragging) return;
     e.preventDefault();
-    var sl = document.getElementById('sl-cut');
-    sl.value = xToSlider(svgX(e));
+    e.stopPropagation();
+    document.getElementById('sl-cut').value = xToSlider(svgX(e));
     update();
-  }
+  }, {passive:false});
 
-  function onEnd(){ dragging = false; }
+  wrap.addEventListener('touchend', function(e){
+    dragging = false;
+  }, {passive:true});
 
-  svg.addEventListener('touchstart', onStart, {passive:false});
-  svg.addEventListener('touchmove',  onMove,  {passive:false});
-  svg.addEventListener('touchend',   onEnd,   {passive:true});
-  svg.addEventListener('mousedown',  onStart);
-  svg.addEventListener('mousemove',  onMove);
-  svg.addEventListener('mouseup',    onEnd);
-  svg.style.cursor = 'grab';
-  svg.style.touchAction = 'none';
+  // Mouse fallback for desktop
+  wrap.addEventListener('mousedown', function(e){
+    if(nearBall(svgX(e))){ dragging = true; e.preventDefault(); }
+  });
+  document.addEventListener('mousemove', function(e){
+    if(!dragging) return;
+    document.getElementById('sl-cut').value = xToSlider(svgX(e));
+    update();
+  });
+  document.addEventListener('mouseup', function(){ dragging = false; });
 })();
 
 // Prevent page scroll while dragging any slider
