@@ -270,90 +270,10 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:22px; h
 .start-btn:hover { background:rgba(242,242,238,0.18); box-shadow:0 0 28px rgba(242,242,238,0.1); }
 .start-btn.running { background:rgba(200,48,32,0.15); border-color:var(--red); color:#f08070; }
 .start-btn.running:hover { background:rgba(200,48,32,0.25); }
-
-/* ── GO Mode ── */
-#go-overlay {
-  display:none; position:fixed; inset:0; z-index:50;
-  background:var(--bg);
-  background-image:radial-gradient(ellipse at 50% 30%, rgba(26,54,26,0.7) 0%, transparent 70%);
-  flex-direction:column; align-items:center; justify-content:center;
-  cursor:pointer;
-  user-select:none; -webkit-user-select:none;
-}
-#go-overlay.open { display:flex; }
-
-#go-flash {
-  position:absolute; inset:0; pointer-events:none;
-  background:var(--gold); opacity:0; transition:opacity 0.04s;
-}
-
-#go-exit {
-  position:absolute; top:18px; right:18px;
-  width:42px; height:42px; border-radius:50%;
-  border:1px solid var(--border-gold);
-  background:rgba(232,160,48,0.10);
-  color:var(--gold); font-size:20px;
-  cursor:pointer; display:flex; align-items:center; justify-content:center;
-  transition:background 0.15s; z-index:2;
-}
-#go-exit:hover { background:rgba(232,160,48,0.28); }
-
-#go-pips {
-  display:flex; gap:16px; margin-bottom:32px; flex-wrap:wrap; justify-content:center;
-}
-.go-pip {
-  width:18px; height:18px; border-radius:50%;
-  background:rgba(242,242,238,0.12); border:1.5px solid rgba(242,242,238,0.22);
-  transition:background 0.04s, box-shadow 0.04s, transform 0.04s;
-}
-.go-pip.one { width:26px; height:26px; background:rgba(232,160,48,0.18); border-color:rgba(232,160,48,0.45); }
-.go-pip.active { background:var(--white); box-shadow:0 0 16px rgba(242,242,238,0.6); transform:scale(1.28); }
-.go-pip.one.active { background:var(--gold); box-shadow:0 0 32px var(--glow); }
-
-#go-num {
-  font-family:'Cormorant Garamond',serif; font-weight:300;
-  font-size:clamp(160px,42vw,340px); line-height:0.88;
-  color:var(--gold); text-align:center;
-  text-shadow:0 0 80px rgba(232,160,48,0.18);
-  transition:transform 0.05s, color 0.05s, text-shadow 0.05s;
-  pointer-events:none;
-}
-#go-num.pulse     { transform:scale(1.07); color:var(--white); text-shadow:0 0 80px rgba(232,160,48,0.7); }
-#go-num.one-pulse { transform:scale(1.12); color:var(--white); text-shadow:0 0 120px rgba(232,160,48,1.0); }
-
-#go-hint {
-  margin-top:28px;
-  font-family:'Cormorant Garamond',serif; font-style:italic; font-weight:300;
-  font-size:clamp(16px,4vw,22px); color:var(--white-dim); letter-spacing:0.12em;
-  pointer-events:none;
-}
-
-/* GO button */
-.go-btn {
-  width:100%; padding:16px;
-  background:rgba(232,160,48,0.12);
-  border:1px solid rgba(232,160,48,0.4);
-  border-radius:10px;
-  color:var(--gold);
-  font-family:'Cormorant Garamond',serif; font-size:24px; font-weight:600; letter-spacing:0.12em;
-  cursor:pointer; transition:all 0.15s;
-  margin-top:2px;
-}
-.go-btn:hover { background:rgba(232,160,48,0.22); box-shadow:0 0 24px rgba(232,160,48,0.15); }
-.go-btn:active { transform:scale(0.98); }
 </style>
 </head>
 <body>
 <div id="flash-overlay"></div>
-
-<!-- GO Mode fullscreen overlay -->
-<div id="go-overlay" onclick="goOverlayTap(event)">
-  <div id="go-flash"></div>
-  <button id="go-exit" onclick="exitGoMode(event)" aria-label="Back to settings">⚙</button>
-  <div id="go-pips"></div>
-  <div id="go-num">—</div>
-  <div id="go-hint">tap to start</div>
-</div>
 <div id="err-banner" style="display:none;position:fixed;top:0;left:0;right:0;background:#c83020;color:#fff;font-size:13px;padding:8px 12px;z-index:999;word-break:break-all;"></div>
 
 <div class="hdr">
@@ -539,8 +459,6 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:22px; h
     </div>
   </div>
 
-  <button class="go-btn" onclick="enterGoMode()">▶ &nbsp;GO</button>
-
 </div>
 
 <script>
@@ -551,7 +469,6 @@ let audioCtx=null, nextBeatTime=0;
 let schedulerTimer=null, drawTimer=null, beatQueue=[];
 let selectedVoice=null, voiceStyle='numbers', subdivision='none', clickTone='wood';
 let currentBeatPos=1, tapTimes=[], flashEnabled=false;
-let goModeOpen=false;
 
 // beatWord() defined below uses countLang
 const subdivWords={eighth:['','and'],sixteenth:['','e','and','a']};
@@ -587,44 +504,6 @@ function buildPips(){
     const d=document.createElement('div');
     d.className='pip'+(i===1?' one':''); d.id='pip-'+i; el.appendChild(d);
   }
-}
-
-function buildGoPips(){
-  const el=document.getElementById('go-pips'); el.innerHTML='';
-  for(let i=1;i<=beatsPerBar;i++){
-    const d=document.createElement('div');
-    d.className='go-pip'+(i===1?' one':''); d.id='go-pip-'+i; el.appendChild(d);
-  }
-}
-
-function enterGoMode(){
-  goModeOpen=true;
-  buildGoPips();
-  // Sync current beat number or dash
-  const cur=document.getElementById('beat-num').textContent;
-  document.getElementById('go-num').textContent=cur;
-  // Update hint
-  updateGoHint();
-  document.getElementById('go-overlay').classList.add('open');
-  // Start if not already running
-  if(!running){ startMetronome(); }
-}
-
-function exitGoMode(e){
-  if(e){ e.stopPropagation(); }
-  goModeOpen=false;
-  document.getElementById('go-overlay').classList.remove('open');
-}
-
-function goOverlayTap(e){
-  // Ignore if the exit button was clicked
-  if(e.target.id==='go-exit') return;
-  toggleMetronome();
-  updateGoHint();
-}
-
-function updateGoHint(){
-  document.getElementById('go-hint').textContent = running ? 'tap to stop' : 'tap to start';
 }
 
 // BPM input field — type a value directly
@@ -744,17 +623,10 @@ function speakBeat(beat){
 }
 
 function flashScreen(isOne){
-  if(flashEnabled){
-    const el=document.getElementById('flash-overlay');
-    el.style.opacity=isOne?'0.13':'0.05';
-    setTimeout(()=>{el.style.opacity='0';},80);
-  }
-  // Flash GO overlay only if flashEnabled
-  if(goModeOpen && flashEnabled){
-    const gf=document.getElementById('go-flash');
-    gf.style.opacity=isOne?'0.13':'0.05';
-    setTimeout(()=>{gf.style.opacity='0';},80);
-  }
+  if(!flashEnabled) return;
+  const el=document.getElementById('flash-overlay');
+  el.style.opacity=isOne?'0.13':'0.05';
+  setTimeout(()=>{el.style.opacity='0';},80);
 }
 
 function flashBeat(beat){
@@ -769,17 +641,6 @@ function flashBeat(beat){
   flashScreen(isOne);
   document.querySelectorAll('.pip').forEach(p=>p.classList.remove('active'));
   const pip=document.getElementById('pip-'+beat); if(pip)pip.classList.add('active');
-  // Mirror to GO mode
-  if(goModeOpen){
-    const gn=document.getElementById('go-num');
-    gn.textContent=beat;
-    gn.classList.remove('pulse','one-pulse');
-    void gn.offsetWidth;
-    gn.classList.add(isOne?'one-pulse':'pulse');
-    document.querySelectorAll('.go-pip').forEach(p=>p.classList.remove('active'));
-    const gp=document.getElementById('go-pip-'+beat); if(gp)gp.classList.add('active');
-    setTimeout(()=>{ gn.classList.remove('pulse','one-pulse'); }, Math.min(180,(60000/bpm)*0.35));
-  }
   setTimeout(()=>{
     numEl.classList.remove('pulse','one-pulse'); wordEl.classList.remove('flash');
   }, Math.min(180,(60000/bpm)*0.35));
@@ -836,6 +697,12 @@ function toggleMetronome(){
 
 async function startMetronome(){
   tryLoadVoices(); // iOS: guaranteed user gesture here
+  // iOS PWA: unlock speech synthesis with a silent utterance on first tap
+  try {
+    const unlock = new SpeechSynthesisUtterance('');
+    unlock.volume = 0;
+    window.speechSynthesis.speak(unlock);
+  } catch(e){}
   if(!audioCtx){ audioCtx=new(window.AudioContext||window.webkitAudioContext)(); }
   if(audioCtx.state==='suspended') await audioCtx.resume();
   running=true; beatQueue=[]; currentBeatPos=1;
@@ -855,12 +722,6 @@ function stopMetronome(){
   document.querySelectorAll('.pip').forEach(p=>p.classList.remove('active'));
   document.getElementById('press-hint').innerHTML=(T[uiLang]||T.en).pressStart;
   document.getElementById('beat-display').classList.remove('running');
-  // GO mode reset
-  if(goModeOpen){
-    document.getElementById('go-num').textContent='—';
-    document.querySelectorAll('.go-pip').forEach(p=>p.classList.remove('active'));
-    updateGoHint();
-  }
 }
 
 document.getElementById('sl-bpm').addEventListener('input',function(){
