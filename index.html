@@ -452,53 +452,103 @@ body.fs-mode #fs-btn { top:20px; right:20px; width:40px; height:40px; font-size:
 </div>
 
 <!-- Voice Timing Calibration Panel — opens under beat display -->
-<div id="timing-cal-panel" style="display:none;background:rgba(10,10,10,0.97);border:1px solid rgba(232,160,48,0.3);border-radius:0 0 10px 10px;padding:12px 14px;margin-top:-1px;width:100%;box-sizing:border-box;max-width:520px;">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-    <span style="font-size:10px;font-weight:900;letter-spacing:1px;color:var(--gold);">OSCILLOSCOPE — VOICE TIMING</span>
-    <div style="display:flex;gap:8px;align-items:center;">
-      <span style="font-size:9px;color:var(--gold);">▬ beat</span>
-      <span style="font-size:9px;color:var(--orange);">▬ voice</span>
+<div id="timing-cal-panel" style="display:none;background:rgba(10,10,10,0.97);border:1px solid rgba(232,160,48,0.35);border-radius:0 0 10px 10px;padding:14px 16px;margin-top:-1px;width:100%;box-sizing:border-box;max-width:520px;">
+
+  <!-- Header row: title + ? + X -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+    <span style="font-size:11px;font-weight:900;letter-spacing:1px;color:rgba(232,160,48,0.7);">VOICE CALIBRATION</span>
+    <div style="display:flex;gap:8px;">
+      <button onclick="toggleCalHelp()" id="cal-help-btn"
+        style="width:26px;height:26px;border-radius:50%;border:1px solid rgba(255,255,255,0.3);
+               background:none;color:rgba(255,255,255,0.6);font-size:13px;font-weight:900;
+               cursor:pointer;line-height:1;">?</button>
+      <button onclick="toggleTimingPanel()"
+        style="width:26px;height:26px;border-radius:50%;border:1px solid rgba(255,255,255,0.3);
+               background:none;color:rgba(255,255,255,0.6);font-size:16px;
+               cursor:pointer;line-height:1;">✕</button>
     </div>
   </div>
 
-  <!-- Beat trace (top) -->
-  <div style="font-size:8px;color:rgba(255,255,255,0.35);margin-bottom:2px;letter-spacing:1px;">BEAT PULSE</div>
-  <canvas id="osc-beat" width="480" height="44"
-    style="width:100%;height:44px;background:rgba(0,0,0,0.5);border-radius:4px;border:1px solid rgba(255,255,255,0.06);display:block;"></canvas>
-
-  <!-- Voice trace (bottom) -->
-  <div style="font-size:8px;color:rgba(255,255,255,0.35);margin:6px 0 2px;letter-spacing:1px;">VOICE ONSET (MIC)</div>
-  <canvas id="osc-voice" width="480" height="44"
-    style="width:100%;height:44px;background:rgba(0,0,0,0.5);border-radius:4px;border:1px solid rgba(255,255,255,0.06);display:block;"></canvas>
-
-  <div id="osc-status" style="font-size:10px;color:var(--white-dim);text-align:center;margin-top:6px;min-height:14px;">
-    Press START to enable microphone and begin measuring.
+  <!-- Help text — hidden by default -->
+  <div id="cal-help-text" style="display:none;background:rgba(255,255,255,0.04);border-radius:6px;padding:10px 12px;margin-bottom:12px;font-size:11px;color:rgba(255,255,255,0.7);line-height:1.7;">
+    <p style="margin:0 0 8px 0;">Every device has a small delay between when the app asks it to speak and when the voice actually comes out of the speaker. This is called <em>TTS latency</em> — and it varies from phone to phone.</p>
+    <p style="margin:0 0 8px 0;">The orange arrow shows where the click and flash land — that is the beat. The blue arrow shows where the voice is landing. In a perfect world they coincide.</p>
+    <p style="margin:0 0 8px 0;"><strong style="color:var(--green-hi);">Auto correction</strong> measures your device's lag over the first few beats and applies the correction silently. For most users this is all you need.</p>
+    <p style="margin:0 0 8px 0;"><strong style="color:#70c0f0;">Manual correction</strong> lets you hear the difference yourself. Slide right and left until the voice lands where you want it relative to the beat. The number shows how many milliseconds of delay you are applying.</p>
+    <p style="margin:0;">The <strong>Mute Click</strong> button silences the click tone so you can listen to the voice alone while calibrating.</p>
   </div>
 
-  <div style="display:flex;gap:8px;margin-top:8px;">
-    <button id="osc-start-btn" onclick="oscStart()"
-      style="flex:1;padding:8px;font-size:12px;font-weight:900;background:rgba(136,238,136,0.15);border:1px solid var(--green-hi);border-radius:6px;color:var(--green-hi);cursor:pointer;touch-action:manipulation;">
-      START
+  <!-- Explanation -->
+  <p style="font-size:12px;color:var(--white);line-height:1.6;margin:0 0 12px 0;">
+    The generated voice may lag behind the beat. This changes with each device.
+    Automatic compensation is made, or you may apply the compensation for your device here, manually.
+    The lag is measured in milliseconds.
+  </p>
+
+  <!-- Device lag readout -->
+  <div style="text-align:center;margin-bottom:12px;">
+    <span id="lag-device-text" style="font-size:16px;font-weight:900;color:var(--white);">Measuring device lag...</span>
+  </div>
+
+  <!-- Arrows display -->
+  <div id="arrow-display" style="position:relative;width:100%;height:100px;background:rgba(0,0,0,0.6);border-radius:6px;border:1px solid rgba(255,255,255,0.08);margin-bottom:6px;overflow:hidden;">
+    <svg id="arrow-top" style="position:absolute;top:0;left:0;width:100%;height:50px;" viewBox="0 0 480 50" preserveAspectRatio="none">
+      <line id="arrow-top-shaft" x1="240" y1="0" x2="240" y2="32" stroke="#e8a030" stroke-width="3"/>
+      <polygon id="arrow-top-head" points="240,50 227,32 253,32" fill="#e8a030"/>
+      <text x="6" y="14" font-family="Lato,sans-serif" font-size="11" font-weight="bold" fill="#e8a030">▼ Click and flash</text>
+    </svg>
+    <svg id="arrow-bot" style="position:absolute;bottom:0;left:0;width:100%;height:50px;" viewBox="0 0 480 50" preserveAspectRatio="none">
+      <line id="arrow-bot-shaft" x1="240" y1="50" x2="240" y2="18" stroke="#70c0f0" stroke-width="3"/>
+      <polygon id="arrow-bot-head" points="240,0 227,18 253,18" fill="#70c0f0"/>
+      <text x="6" y="46" font-family="Lato,sans-serif" font-size="11" font-weight="bold" fill="#70c0f0">▲ Voice</text>
+    </svg>
+    <div id="sync-indicator" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:13px;font-weight:900;color:#88ee88;display:none;white-space:nowrap;">✓ IN SYNC</div>
+    <div id="offset-indicator" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:11px;color:rgba(255,255,255,0.6);white-space:nowrap;text-align:center;"></div>
+  </div>
+
+  <!-- Arrow legend -->
+  <div style="font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:14px;line-height:1.6;">
+    Orange = click &amp; flash (fixed) &nbsp;·&nbsp; Blue = voice (moves with slider).<br>
+    Slide right until blue meets orange.
+  </div>
+
+  <!-- Single row: one mode button + click mute -->
+  <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
+    <button id="cal-mode-btn" onclick="setCorrectionMode(correctionMode==='auto'?'manual':'auto')"
+      style="padding:5px 10px;font-size:10px;font-weight:900;border-radius:5px;cursor:pointer;white-space:nowrap;
+             background:rgba(136,238,136,0.2);border:1px solid var(--green-hi);color:var(--green-hi);">
+      Auto ON
     </button>
-    <button onclick="oscStop()"
-      style="padding:8px 14px;background:none;border:1px solid rgba(255,255,255,0.2);border-radius:6px;color:var(--white-dim);font-size:12px;cursor:pointer;">
-      STOP
-    </button>
-    <button onclick="oscClear()"
-      style="padding:8px 14px;background:none;border:1px solid rgba(255,255,255,0.2);border-radius:6px;color:var(--white-dim);font-size:12px;cursor:pointer;">
-      CLEAR
+    <button id="osc-mute-btn" onclick="toggleCalClickMute()"
+      style="padding:5px 10px;background:rgba(200,48,32,0.15);border:1px solid rgba(200,48,32,0.4);
+             border-radius:5px;color:#f08070;font-size:10px;font-weight:900;cursor:pointer;white-space:nowrap;">
+      Click ON
     </button>
   </div>
-  <div style="font-size:9px;color:var(--white-dim);margin-top:6px;line-height:1.4;text-align:center;">
-    Adjust the Voice Timing slider until the two traces align.
+
+  <!-- Manual slider — hidden by default -->
+  <div id="manual-mode-display" style="display:none;margin-bottom:8px;">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span style="font-size:10px;color:var(--white);white-space:nowrap;">0</span>
+      <input type="range" id="sl-voice-offset-osc" min="0" max="500" value="0" step="1"
+        style="-webkit-appearance:none;flex:1;height:6px;background:rgba(242,242,238,0.2);border-radius:3px;outline:none;touch-action:none;"
+        oninput="onManualSlider(this.value)">
+      <span style="font-size:10px;color:var(--white);white-space:nowrap;">-500ms</span>
+    </div>
+    <div style="text-align:center;margin-top:5px;">
+      <span id="manual-offset-display" style="font-size:15px;font-weight:900;color:var(--gold);">-4ms</span>
+    </div>
   </div>
+
 </div>
-
-<!-- Toggle button for timing panel -->
+<!-- Toggle button -->
+<div style="text-align:center;margin-top:4px;">
+  <span id="lag-comp-status" style="font-size:10px;color:rgba(255,255,255,0.4);">Voice timing calibrating...</span>
+</div>
 <button onclick="toggleTimingPanel()" id="timing-toggle-btn"
-  style="display:block;margin:6px auto 0;font-size:10px;font-weight:900;letter-spacing:0.05em;
-         background:none;border:1px solid rgba(232,160,48,0.3);border-radius:4px;
-         color:rgba(232,160,48,0.6);padding:3px 12px;cursor:pointer;touch-action:manipulation;">
+  style="display:block;margin:4px auto 0;font-size:10px;font-weight:900;letter-spacing:0.05em;
+         background:none;border:1px solid rgba(232,160,48,0.35);border-radius:4px;
+         color:rgba(232,160,48,0.9);padding:3px 14px;cursor:pointer;touch-action:manipulation;">
   VOICE CALIBRATION ▾
 </button>
 
@@ -567,20 +617,9 @@ body.fs-mode #fs-btn { top:20px; right:20px; width:40px; height:40px; font-size:
     </div>
   </div>
 
-  <div class="ctrl-panel">
-    <div class="ctrl-label" style="color:var(--white-mid)">Voice Timing</div>
-    <div style="display:flex;align-items:center;gap:10px;margin-top:6px;">
-      <span style="font-size:10px;color:var(--white-dim);white-space:nowrap;">−800ms</span>
-      <input type="range" id="sl-voice-offset" min="-800" max="1200" value="80" step="10"
-        style="-webkit-appearance:none;flex:1;height:5px;background:rgba(242,242,238,0.2);border-radius:3px;outline:none;touch-action:none;"
-        oninput="adjustVoiceOffset(parseInt(this.value),'set')">
-      <span style="font-size:10px;color:var(--white-dim);white-space:nowrap;">+1200ms</span>
-    </div>
-    <div style="display:flex;justify-content:center;align-items:center;gap:12px;margin-top:6px;">
-      <span id="voice-offset-display" style="font-size:14px;font-weight:900;color:var(--gold);">0 ms</span>
-      <button onclick="adjustVoiceOffset(0,'reset')" class="pill sm" style="color:var(--white-dim);">reset</button>
-    </div>
-    <div style="font-size:9px;color:var(--white-dim);margin-top:5px;line-height:1.4;">Slide left if voice lags the beat. Slide right if it fires early.</div>
+  <div style="display:none;">
+    <input type="range" id="sl-voice-offset" min="0" max="400" value="15" step="5">
+    <span id="voice-offset-display"></span>
 
 
   <div class="ctrl-panel">
@@ -665,10 +704,13 @@ let swingRatio=1.0;    // 1.0=straight, 1.5=light swing, 2.0=hard swing
 // Pending changes — applied on next beat 1
 let pendingLang=null, pendingVoice=null, pendingBeats=null, pendingCompound=null, pendingSubdiv=null;
 let tripletStyle='triplet'; // 'triplet'=trip-let, 'solfege'=la-li, 'numbers'=2-3
-let voiceOffset = 80; // ms — default offset compensates for natural TTS lag
+let voiceOffset = 10; // ms — calibrated default for this device
+let simulatedLatency = 0; // ms — added to speech delay to simulate slow devices
+let correctionMode = "auto"; // "auto" or "manual"
 let audioCtx=null, nextBeatTime=0;
 let schedulerTimer=null, drawTimer=null, beatQueue=[];
 let selectedVoice=null, voiceStyle='numbers', subdivision='none', clickTone='wood';
+let clickMuted = false; // mute click during voice calibration
 let currentBeatPos=1, tapTimes=[], flashEnabled=false;
 
 // beatWord() defined below uses countLang
@@ -754,13 +796,19 @@ document.getElementById('bpm-val').addEventListener('keydown', function(e){
 window.addEventListener('load', function(){ adjustVoiceOffset(0,'set'); document.getElementById('sl-voice-offset') && (document.getElementById('sl-voice-offset').value=voiceOffset); adjustVoiceOffset(voiceOffset,'set'); });
 
 function adjustVoiceOffset(val, mode) {
-  if (mode === 'reset') voiceOffset = 0;
+  if (mode === 'reset') { voiceOffset = 10; }
   else if (mode === 'set') voiceOffset = val;
-  else voiceOffset = Math.max(-800, Math.min(1200, voiceOffset + val));
+  else voiceOffset = Math.max(-500, Math.min(0, voiceOffset + val));
+  const disp = (voiceOffset > 0 ? '+' : '') + voiceOffset + ' ms';
   const el = document.getElementById('voice-offset-display');
-  if (el) el.textContent = (voiceOffset > 0 ? '+' : '') + voiceOffset + ' ms';
+  if (el) el.textContent = disp;
+  const el2 = document.getElementById('osc-offset-display');
+  if (el2) el2.textContent = disp;
   const sl = document.getElementById('sl-voice-offset');
   if (sl && mode !== 'set') sl.value = voiceOffset;
+  // osc slider managed by onManualSlider and setCorrectionMode only
+  // Redraw when stopped so slider shifts voice pulses for alignment
+  if (!_oscRunning && _oscBeatPulses.length) _drawCombined();
 }
 
 function nudgeBpm(delta) {
@@ -827,6 +875,7 @@ function playClick(time, vol, rate, beat){
 }
 
 function scheduleClick(time, beat, subLevel){
+  if (clickMuted) return;
   // In sounds mode — suppress beat clicks, but keep subdivision ticks
   if(voiceStyle === 'sounds' && subLevel === 0) return;
   const isOne = (beat === 1);
@@ -1326,7 +1375,13 @@ function scheduler(){
         }
       }
     }
-    scheduleClick(nextBeatTime,beat,0);
+    // Voice fires on beat — cannot be made earlier
+    // Flash and click delayed by voiceOffset to meet the voice
+    // voiceOffset is 0 in auto (handled by pre-queue), negative in manual
+    // In manual: -voiceOffset = the delay we need to apply
+    const _audioDelay = correctionMode === "manual" ? Math.max(0, -voiceOffset/1000) : 0;
+    const _delayedClickTime = nextBeatTime + _audioDelay;
+    scheduleClick(_delayedClickTime, beat, 0);
     beatQueue.push({beat, time:nextBeatTime});
     // Voice offset handled in drawLoop via early trigger threshold
     // Subdivision pops — audio, and queue entry for triplet voice
@@ -1340,7 +1395,7 @@ function scheduler(){
         st = nextBeatTime + s * subDur;
       }
       const level=(subdivision==='sixteenth'&&s===2)?1 : (subdivision==='eighth'&&s===1)?1 : (subdivision==='triplet')?1 : 2;
-      scheduleClick(st,0,level);
+      scheduleClick(st + (voiceOffset > 0 ? voiceOffset/1000 : 0), 0, level);
       // Queue triplet sub-beats for spoken counting at slow tempos
       if(subdivision==='triplet' && bpm <= TRIPLET_VOICE_LIMIT){
         const syls = {
@@ -1361,20 +1416,18 @@ function scheduler(){
 
 function drawLoop(){
   const now=audioCtx?audioCtx.currentTime:0;
-  // Voice offset: fire speech early (negative) or late (positive)
-  // Negative offset means trigger speech earlier than the beat
-  const _voiceAdvance = 0.015 + (-voiceOffset / 1000); // seconds before beat to speak
-  while(beatQueue.length && beatQueue[0].time <= now + _voiceAdvance){
+  while(beatQueue.length && beatQueue[0].time <= now + 0.015){
     const ev=beatQueue.shift();
     if(ev.beat > 0) { _lastBeatTime = audioCtx ? audioCtx.currentTime * 1000 : null; _oscRecordBeat(); }
-    flashBeat(ev.beat);
-    if (voiceOffset > 0) {
-      // Positive offset: delay speech after beat fires
-      const _beat = ev.beat, _time = ev.time, _syl = ev.tripletSyllable;
-      setTimeout(function(){ speakBeat(_beat, _time, _syl); }, voiceOffset);
+    // Voice fires immediately on beat
+    speakBeat(ev.beat, ev.time, ev.tripletSyllable);
+    // Flash delayed by voiceOffset to meet the voice
+    const _flashDelay = correctionMode === "manual" ? Math.max(0, -voiceOffset) : 0;
+    if (_flashDelay > 0) {
+      const _b = ev.beat;
+      setTimeout(function(){ flashBeat(_b); }, _flashDelay);
     } else {
-      // Zero or negative offset: speak now (negative already triggered early via threshold)
-      speakBeat(ev.beat, ev.time, ev.tripletSyllable);
+      flashBeat(ev.beat);
     }
   }
   drawTimer=requestAnimationFrame(drawLoop);
@@ -3189,145 +3242,189 @@ document.addEventListener('keydown', function(e){
 </script>
 
 <script>
-// ── OSCILLOSCOPE — VOICE TIMING ───────────────────────────────────────
-let _oscRunning = false;
-let _micStream = null;
-let _micCtx = null;
-let _micAnalyser = null;
-let _oscBeatPulses = [];   // {t: audioCtx.currentTime}
-let _oscVoicePulses = [];  // {t: performance.now()} from mic detection
-let _oscAnimFrame = null;
-let _lastBeatTime = null;
-let _tapOffsets = [], _voiceFireTimes = [];
+// ── OSCILLOSCOPE — DIGITAL VOICE TIMING ─────────────────────────────
+// Beat pulses: performance.now() when scheduler fires
+// Voice pulses: performance.now() from utterance.onstart (when speech engine begins)
+let _oscBeatPulses  = [];  // {t: ms}
+let _oscVoicePulses = [];  // {t: ms}
+let _oscAnimFrame   = null;
+let _oscRunning     = false;
 
-const OSC_WINDOW = 4.0; // seconds of history shown
-const OSC_THRESHOLD = 0.08; // mic energy threshold for voice detection
-const OSC_COOLDOWN = 0.15;  // seconds between voice detections
-let _lastVoiceDetect = 0;
+let OSC_WINDOW = 2.5; // seconds shown — roughly 2 beats at most tempos
 
-async function oscStart() {
-  if (_oscRunning) return;
-  const btn = document.getElementById('osc-start-btn');
-  const status = document.getElementById('osc-status');
-  if (status) status.textContent = 'Requesting microphone access...';
-  try {
-    _micStream = await navigator.mediaDevices.getUserMedia({ audio: {
-      echoCancellation: false,
-      noiseSuppression: false,
-      autoGainControl: false
-    }, video: false });
-  } catch(e) {
-    if (status) status.textContent = 'Microphone denied. Cannot measure voice timing.';
-    return;
-  }
-  _micCtx = new (window.AudioContext || window.webkitAudioContext)();
-  const src = _micCtx.createMediaStreamSource(_micStream);
-  _micAnalyser = _micCtx.createAnalyser();
-  _micAnalyser.fftSize = 256;
-  src.connect(_micAnalyser);
+function oscStart() {
   _oscRunning = true;
-  if (btn) { btn.textContent = 'RUNNING'; btn.style.background = 'rgba(136,238,136,0.3)'; }
-  if (status) status.textContent = 'Listening. Start the metronome and speak clearly.';
   oscClear();
-  _oscDetectLoop();
+  const btn = document.getElementById('osc-start-btn');
+  if (btn) { btn.textContent = 'RUNNING'; btn.style.background = 'rgba(136,238,136,0.3)'; }
+  const st = document.getElementById('osc-status');
+  if (st) st.textContent = 'Running. Slide until top and bottom spikes align — that is your correct offset.';
   _oscDrawLoop();
 }
 
 function oscStop() {
   _oscRunning = false;
-  if (_micStream) { _micStream.getTracks().forEach(t => t.stop()); _micStream = null; }
-  if (_micCtx) { _micCtx.close(); _micCtx = null; }
   if (_oscAnimFrame) { cancelAnimationFrame(_oscAnimFrame); _oscAnimFrame = null; }
   const btn = document.getElementById('osc-start-btn');
-  const status = document.getElementById('osc-status');
   if (btn) { btn.textContent = 'START'; btn.style.background = 'rgba(136,238,136,0.15)'; }
-  if (status) status.textContent = 'Stopped. Press START to measure again.';
+  const st = document.getElementById('osc-status');
+  if (st) st.textContent = 'Frozen — showing measured lag and correction';
+  _drawCombined(); // freeze current position
 }
 
 function oscClear() {
   _oscBeatPulses = []; _oscVoicePulses = [];
-  _drawOscCanvas('osc-beat', _oscBeatPulses, '#e8a030');
-  _drawOscCanvas('osc-voice', _oscVoicePulses, '#e87030');
+  _drawCombined();
+  const status = document.getElementById('osc-status');
+  if (status) status.textContent = _oscRunning ? 'Running. Start the metronome.' : 'Cleared.';
 }
 
-function _oscDetectLoop() {
-  if (!_oscRunning || !_micAnalyser) return;
-  const buf = new Uint8Array(_micAnalyser.frequencyBinCount);
-  _micAnalyser.getByteTimeDomainData(buf);
-  let rms = 0;
-  for (let i = 0; i < buf.length; i++) { const v = (buf[i]-128)/128; rms += v*v; }
-  rms = Math.sqrt(rms / buf.length);
-
-  const now = performance.now() / 1000;
-  if (rms > OSC_THRESHOLD && (now - _lastVoiceDetect) > OSC_COOLDOWN) {
-    _lastVoiceDetect = now;
-    _oscVoicePulses.push({t: now});
-    if (_oscVoicePulses.length > 60) _oscVoicePulses.shift();
-  }
-  setTimeout(_oscDetectLoop, 8); // ~120fps polling
-}
-
-// Called from drawLoop when a beat fires
+// Called from drawLoop when beat fires
 function _oscRecordBeat() {
   if (!_oscRunning) return;
-  _oscBeatPulses.push({t: performance.now() / 1000});
-  if (_oscBeatPulses.length > 60) _oscBeatPulses.shift();
+  _oscBeatPulses.push({t: performance.now()});
+  if (_oscBeatPulses.length > 80) _oscBeatPulses.shift();
 }
 
-function _drawOscCanvas(id, pulses, color) {
-  const canvas = document.getElementById(id);
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  const W = canvas.width, H = canvas.height;
-  ctx.clearRect(0, 0, W, H);
-
-  // Baseline
-  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-  ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(0, H/2); ctx.lineTo(W, H/2); ctx.stroke();
-
-  // Pulses — scrolling window
-  const now = performance.now() / 1000;
-  const winStart = now - OSC_WINDOW;
-  ctx.fillStyle = color;
-  pulses.forEach(p => {
-    if (p.t < winStart) return;
-    const x = ((p.t - winStart) / OSC_WINDOW) * W;
-    // Draw pulse: vertical spike from baseline
-    ctx.beginPath();
-    ctx.moveTo(x, H/2);
-    ctx.lineTo(x, H * 0.05);
-    ctx.lineTo(x+2, H * 0.05);
-    ctx.lineTo(x+2, H/2);
-    ctx.fill();
-  });
-
-  // Scrolling time cursor
-  ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-  ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(W-1, 0); ctx.lineTo(W-1, H); ctx.stroke();
+// Called from speakBeat when utterance.onstart fires
+function _updateLagDisplay() {
+  const el = document.getElementById('lag-readout');
+  if (!el) return;
+  if (!_measuredLags.length) { el.textContent = '—'; return; }
+  const avg = Math.round(_measuredLags.reduce((a,b)=>a+b,0)/_measuredLags.length);
+  const sim = simulatedLatency > 0 ? ' (incl. +'+simulatedLatency+'ms sim)' : '';
+  el.textContent = avg + 'ms' + sim;
+  el.style.color = avg < 50 ? '#88ee88' : avg < 150 ? '#e8a030' : '#e87070';
+  // Auto mode: apply compensation, keep voiceOffset=0 for display
+  if (_measuredLags.length >= 3 && correctionMode === 'auto') {
+    // Audio compensation handled by scheduler using avgLag directly
+    voiceOffset = 0; // display shows 0 = in sync
+  }
+  _drawCombined();
+  // Update lag text in panel
+  const lagEl = document.getElementById('lag-device-text');
+  if (lagEl) {
+    lagEl.textContent = _measuredLags.length < 3
+      ? 'Measuring device lag...'
+      : 'Your device is lagging ' + avg + 'ms';
+    lagEl.style.color = _measuredLags.length < 3 ? 'rgba(255,255,255,0.4)'
+      : avg < 50 ? '#88ee88' : avg < 150 ? '#e8a030' : '#e87070';
+  }
+  // Update status below toggle button
+  const compEl = document.getElementById('lag-comp-status');
+  if (compEl) {
+    if (_measuredLags.length < 3) {
+      compEl.textContent = 'Measuring...';
+      compEl.style.color = 'rgba(255,255,255,0.4)';
+    } else if (correctionMode === 'auto') {
+      compEl.textContent = 'Device lag: ' + avg + 'ms — compensated ✓';
+      compEl.style.color = '#88ee88';
+    } else {
+      compEl.textContent = 'Device lag: ' + avg + 'ms — manual: +' + voiceOffset + 'ms';
+      compEl.style.color = 'rgba(255,255,255,0.5)';
+    }
+  }
 }
+
+function _oscRecordVoice() {
+  if (!_oscRunning) return;
+  _oscVoicePulses.push({t: performance.now()});
+  if (_oscVoicePulses.length > 80) _oscVoicePulses.shift();
+}
+
+function _drawCombined() {
+  const display = document.getElementById('arrow-display');
+  if (!display) return;
+  const SVG_W = 480;
+
+  const avgLag = _measuredLags.length >= 3
+    ? Math.round(_measuredLags.reduce((a,b)=>a+b,0)/_measuredLags.length)
+    : null;
+
+  const topSvg = document.getElementById('arrow-top');
+  const botSvg = document.getElementById('arrow-bot');
+  const syncEl = document.getElementById('sync-indicator');
+  const offEl  = document.getElementById('offset-indicator');
+
+  // Orange (click/flash) fixed at 20% from left — never moves
+  const ORANGE_X = SVG_W * 0.20;
+
+  // Scale: 500ms (full slider range) maps to 70% of SVG width
+  const pxPerMs = (SVG_W * 0.70) / 500;
+
+  // Orange fixed, blue moves right with slider (-voiceOffset = 0..500)
+  const gapMs = correctionMode === 'auto' ? 0 : Math.max(0, -voiceOffset);
+  const BLUE_X = Math.min(SVG_W - 20, ORANGE_X + gapMs * pxPerMs);
+
+  // Orange = top arrow (click/flash)
+  if (topSvg) {
+    const shaft = document.getElementById('arrow-top-shaft');
+    const head  = document.getElementById('arrow-top-head');
+    if (shaft) { shaft.setAttribute('x1', ORANGE_X); shaft.setAttribute('x2', ORANGE_X); }
+    if (head)  { head.setAttribute('points', ORANGE_X+',52 '+(ORANGE_X-12)+',34 '+(ORANGE_X+12)+',34'); }
+  }
+  // Blue = bottom arrow (voice)
+  if (botSvg) {
+    const shaft = document.getElementById('arrow-bot-shaft');
+    const head  = document.getElementById('arrow-bot-head');
+    if (shaft) { shaft.setAttribute('x1', BLUE_X); shaft.setAttribute('x2', BLUE_X); }
+    if (head)  { head.setAttribute('points', BLUE_X+',0 '+(BLUE_X-12)+',18 '+(BLUE_X+12)+',18'); }
+  }
+
+  const inSync = gapMs < 2;
+  if (syncEl) syncEl.style.display = inSync ? 'block' : 'none';
+  if (offEl) {
+    offEl.style.display = inSync ? 'none' : 'block';
+    offEl.textContent = correctionMode === 'manual' && gapMs > 0
+      ? 'slide right to sync (' + Math.round(gapMs) + 'ms remaining)'
+      : '';
+  }
+
+  // Lag readout
+  const lagEl = document.getElementById('lag-device-text');
+  if (lagEl) {
+    if (avgLag === null) {
+      lagEl.textContent = 'Measuring device lag — start the metronome';
+      lagEl.style.color = 'rgba(255,255,255,0.4)';
+    } else {
+      lagEl.textContent = 'Your device is lagging ' + avgLag + 'ms';
+      lagEl.style.color = avgLag < 50 ? '#88ee88' : avgLag < 150 ? '#e8a030' : '#e87070';
+    }
+  }
+
+  // Update slider display
+  const dispEl = document.getElementById('manual-offset-display');
+  if (dispEl && correctionMode === 'manual') {
+    dispEl.textContent = voiceOffset === 0 ? '0' : voiceOffset + 'ms';
+  }
+}
+
+
+function _drawOscCanvas(id, pulses, isVoice) { /* arrows used instead */ }
 
 function _oscDrawLoop() {
   if (!_oscRunning) return;
-  _drawOscCanvas('osc-beat',  _oscBeatPulses,  '#e8a030');
-  _drawOscCanvas('osc-voice', _oscVoicePulses, '#e87030');
+  OSC_WINDOW = Math.max(1.5, Math.min(4.0, (60/bpm)*2.5));
+  _drawCombined();
 
-  // Measure avg gap between nearest beat/voice pairs
-  if (_oscBeatPulses.length > 2 && _oscVoicePulses.length > 2) {
+  // Measure average offset between voice and nearest beat
+  if (_oscBeatPulses.length >= 2 && _oscVoicePulses.length >= 2) {
     const gaps = [];
-    _oscVoicePulses.slice(-8).forEach(vp => {
-      let closest = null, minD = 99;
+    _oscVoicePulses.slice(-12).forEach(vp => {
+      let minD = 9999, closest = null;
       _oscBeatPulses.forEach(bp => {
         const d = Math.abs(vp.t - bp.t);
         if (d < minD) { minD = d; closest = bp; }
       });
-      if (closest && minD < 1.5) gaps.push((vp.t - closest.t) * 1000);
+      if (closest && minD < (60000 / bpm)) gaps.push(vp.t - closest.t);
     });
-    if (gaps.length > 1) {
+    if (gaps.length >= 2) {
       const avg = Math.round(gaps.reduce((a,b)=>a+b,0)/gaps.length);
       const status = document.getElementById('osc-status');
-      if (status) status.textContent = 'Voice offset from beat: ' + (avg>=0?'+':'') + avg + 'ms  (' + gaps.length + ' samples)';
+      if (status) {
+        const dir = avg > 0 ? 'voice is late by' : 'voice is early by';
+        status.textContent = dir + ' ' + Math.abs(avg) + 'ms  (' + gaps.length + ' samples)  — adjust slider to close the gap';
+      }
     }
   }
 
@@ -3340,11 +3437,179 @@ function toggleTimingPanel() {
   if (!panel) return;
   const open = panel.style.display === 'none' || panel.style.display === '';
   panel.style.display = open ? 'block' : 'none';
-  if (btn) btn.innerHTML = open ? 'VOICE CALIBRATION ▴' : 'VOICE CALIBRATION ▾';
-  if (!open) oscStop();
+  if (btn) btn.innerHTML = open ? 'CLOSE CALIBRATION ▴' : 'VOICE CALIBRATION ▾';
+  if (open) {
+    _oscRunning = true;
+    setTimeout(_drawCombined, 50); // slight delay so DOM is ready
+  } else {
+    oscStop();
+  }
 }
 
-function tapCalReset() { _tapOffsets = []; }
+
+// ── TAP CALIBRATION ───────────────────────────────────────────
+let _tapCalOffsets = [];
+let _tapCalLastBeatMs = null;
+
+// Track last beat time in ms for tap cal reference
+// (already tracked in _lastBeatTime from drawLoop)
+
+function tapCalStart() {
+  _tapCalOffsets = [];
+  document.getElementById('tap-cal-status').textContent = 'Tap in time with the voice — not the click.';
+  document.getElementById('tap-cal-apply-btn').style.display = 'none';
+}
+
+function tapCalStart() {
+  if (!running) {
+    document.getElementById('tap-cal-status').textContent = 'Start the metronome first.';
+    return;
+  }
+  _tapCalOffsets = [];
+  const btn = document.getElementById('tap-cal-start-btn');
+  btn.textContent = 'TAP NOW ▶';
+  btn.onclick = tapCalTap;
+  document.getElementById('tap-cal-status').textContent = 'Tap each time you hear the voice...';
+  document.getElementById('tap-cal-apply-btn').style.display = 'none';
+}
+
+function tapCalTap() {
+  if (!_lastBeatTime || !audioCtx) return;
+  const now = audioCtx.currentTime * 1000;
+  const beatMs = 60000 / bpm;
+  const elapsed = now - _lastBeatTime;
+  const phase = ((elapsed % beatMs) + beatMs) % beatMs;
+  const offset = phase < beatMs/2 ? phase : phase - beatMs;
+  _tapCalOffsets.push(offset);
+  if (_tapCalOffsets.length > 8) _tapCalOffsets.shift();
+  const avg = Math.round(_tapCalOffsets.reduce((a,b)=>a+b,0)/_tapCalOffsets.length);
+  const status = document.getElementById('tap-cal-status');
+  if (status) status.textContent = 'avg: '+(avg>=0?'+':'')+avg+'ms  ('+_tapCalOffsets.length+' taps)';
+  if (_tapCalOffsets.length >= 4) {
+    const applyBtn = document.getElementById('tap-cal-apply-btn');
+    applyBtn.style.display = '';
+    applyBtn.textContent = 'APPLY '+Math.max(0,avg)+'ms';
+    applyBtn._avg = avg;
+  }
+}
+
+function tapCalApply() {
+  const btn = document.getElementById('tap-cal-apply-btn');
+  const avg = btn._avg || 0;
+  const newOffset = Math.max(0, Math.round(avg));
+  adjustVoiceOffset(newOffset, 'set');
+  // sl-voice-offset-osc not used for tap cal
+  const status = document.getElementById('tap-cal-status');
+  if (status) status.textContent = 'Applied: +'+newOffset+'ms. Verify on oscilloscope.';
+  btn.style.display = 'none';
+  const startBtn = document.getElementById('tap-cal-start-btn');
+  if (startBtn) { startBtn.textContent = 'TAP WITH THE VOICE'; startBtn.onclick = tapCalStart; }
+  _drawCombined();
+}
+
+function tapCalClear() {
+  _tapCalOffsets = [];
+  const status = document.getElementById('tap-cal-status');
+  if (status) status.textContent = 'While running, tap in time with the voice — not the click.';
+  document.getElementById('tap-cal-apply-btn').style.display = 'none';
+  const startBtn = document.getElementById('tap-cal-start-btn');
+  if (startBtn) { startBtn.textContent = 'TAP WITH THE VOICE'; startBtn.onclick = tapCalStart; }
+}
+
+
+function toggleCalClickMute() {
+  clickMuted = !clickMuted;
+  const btn = document.getElementById('osc-mute-btn');
+  if (btn) {
+    btn.textContent = clickMuted ? 'CLICK OFF' : 'CLICK ON';
+    btn.style.background = clickMuted ? 'rgba(200,48,32,0.4)' : 'rgba(200,48,32,0.15)';
+  }
+}
+let _tapOffsets = [], _lastBeatTime = null, _voiceFireTimes = [];
+let _speakCallTime = null;
+let _measuredLags = [];
+
+function setCorrectionMode(mode) {
+  correctionMode = mode;
+  const manDisp = document.getElementById('manual-mode-display');
+  const btn     = document.getElementById('cal-mode-btn');
+
+  if (mode === 'auto') {
+    if (manDisp) manDisp.style.display = 'none';
+    if (btn) { btn.textContent = 'Auto Correction ON'; btn.style.background = 'rgba(136,238,136,0.2)'; btn.style.borderColor = 'var(--green-hi)'; btn.style.color = 'var(--green-hi)'; }
+    if (_measuredLags.length >= 3) {
+      const avg = Math.round(_measuredLags.reduce((a,b)=>a+b,0)/_measuredLags.length);
+      adjustVoiceOffset(avg, 'set');
+    }
+  } else {
+    if (manDisp) manDisp.style.display = 'block';
+    if (btn) { btn.textContent = 'Manual ON'; btn.style.background = 'rgba(112,192,240,0.2)'; btn.style.borderColor = '#70c0f0'; btn.style.color = '#70c0f0'; }
+    const _initLag = _measuredLags.length >= 3
+      ? Math.round(_measuredLags.reduce((a,b)=>a+b,0)/_measuredLags.length) : 0;
+    const sl = document.getElementById('sl-voice-offset-osc');
+    if (sl) { sl.min = 0; sl.max = 500; sl.value = 0; sl.step = 1; }
+    adjustVoiceOffset(0, 'set'); // voiceOffset=0 means no compensation = full gap shown
+    const md = document.getElementById('manual-offset-display');
+    if (md) md.textContent = _initLag > 0 ? '-' + _initLag + ' ms' : '0 ms';
+  }
+  _drawCombined();
+}
+
+
+function toggleCalHelp() {
+  const el = document.getElementById('cal-help-text');
+  const btn = document.getElementById('cal-help-btn');
+  if (!el) return;
+  const open = el.style.display === 'none';
+  el.style.display = open ? 'block' : 'none';
+  if (btn) btn.style.color = open ? 'var(--gold)' : 'rgba(255,255,255,0.6)';
+}
+
+function onManualSlider(val) {
+  voiceOffset = -parseInt(val); // slider 0..500 → voiceOffset 0..-500
+  const d = document.getElementById('manual-offset-display');
+  if (d) d.textContent = voiceOffset === 0 ? '0' : voiceOffset + 'ms';
+  _drawCombined();
+}
+
+function setSimLatency(ms) {
+  simulatedLatency = ms;
+  [0,50,100,150,250].forEach(v => {
+    const btn = document.getElementById('sim-'+v);
+    if (btn) btn.classList.toggle('active', v === ms);
+  });
+  const status = document.getElementById('sim-status');
+  if (status) status.textContent = ms === 0
+    ? 'No simulation — real device latency'
+    : 'Simulating +'+ms+'ms (typical: '+(ms<=50?'fast desktop':ms<=100?'iOS Safari':ms<=150?'Android Chrome':'slow device')+')';
+}
+
+// Hook speechSynthesis.speak to:
+// 1. Add simulated latency for testing
+// 2. Capture onstart for measurement
+(function(){
+  var _origSpeak = window.speechSynthesis.speak.bind(window.speechSynthesis);
+  window.speechSynthesis.speak = function(u) {
+    var _callTime = performance.now(); // when we requested speech
+    var _origStart = u.onstart;
+    u.onstart = function(e) {
+      // Measure actual TTS latency
+      var _lag = performance.now() - _callTime;
+      _measuredLags.push(_lag);
+      if (_measuredLags.length > 12) _measuredLags.shift();
+      _updateLagDisplay();
+      _oscRecordVoice();
+      if (_origStart) _origStart(e);
+    };
+    if (simulatedLatency > 0) {
+      // Simulate a slow device by delaying the actual speak call
+      setTimeout(function(){ _origSpeak(u); }, simulatedLatency);
+    } else {
+      _origSpeak(u);
+    }
+  };
+})();
+
 </script>
 
 </body>
