@@ -3440,7 +3440,9 @@ function toggleTimingPanel() {
   if (btn) btn.innerHTML = open ? 'CLOSE CALIBRATION ▴' : 'VOICE CALIBRATION ▾';
   if (open) {
     _oscRunning = true;
-    setTimeout(_drawCombined, 50); // slight delay so DOM is ready
+    setTimeout(_drawCombined, 50);
+    // Fire a silent test utterance to measure lag immediately
+    _measureLagNow();
   } else {
     oscStop();
   }
@@ -3556,6 +3558,27 @@ function setCorrectionMode(mode) {
 }
 
 
+function _measureLagNow() {
+  if (!window.speechSynthesis) return;
+  var u = new SpeechSynthesisUtterance('');
+  u.volume = 0; // silent
+  u.rate = 2;
+  var t = performance.now();
+  var done = false;
+  function record() {
+    if (done) return; done = true;
+    var lag = performance.now() - t;
+    _measuredLags.push(lag);
+    if (_measuredLags.length > 12) _measuredLags.shift();
+    _updateLagDisplay();
+    _drawCombined();
+  }
+  u.onstart = record;
+  u.addEventListener('start', record);
+  setTimeout(function(){ if (!done) record(); }, 1500);
+  window.speechSynthesis.speak(u);
+}
+
 function toggleCalHelp() {
   const el = document.getElementById('cal-help-text');
   const btn = document.getElementById('cal-help-btn');
@@ -3604,16 +3627,16 @@ function setSimLatency(ms) {
     var _origStart = u.onstart;
     u.onstart = function(e) { _recordLag(); if (_origStart) _origStart(e); };
     u.addEventListener('start', _recordLag);
-    // Fallback: if neither fires within 600ms, estimate from elapsed time
+    // Fallback: if onstart never fires, record elapsed time at 1500ms
     setTimeout(function() {
-      if (!_fired && _measuredLags.length < 12) {
+      if (!_fired) {
         _fired = true;
         var _lag = performance.now() - _callTime;
         _measuredLags.push(_lag);
         if (_measuredLags.length > 12) _measuredLags.shift();
         _updateLagDisplay();
       }
-    }, 600);
+    }, 1500);
     if (simulatedLatency > 0) {
       setTimeout(function(){ _origSpeak(u); }, simulatedLatency);
     } else {
