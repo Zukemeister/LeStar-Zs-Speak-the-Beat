@@ -164,6 +164,8 @@ body.fs-mode .tap-btn,
 body.fs-mode .hdr,
 body.fs-mode #speed-notice,
 body.fs-mode #go-btn { display:none; }
+body.fs-mode #bpm-minus,
+body.fs-mode #bpm-plus { opacity:0.75; width:110px; height:110px; font-size:60px; }
 body.fs-mode .beat-display {
   position:fixed !important;
   top:0 !important; left:0 !important;
@@ -315,6 +317,9 @@ body.fs-mode #fs-btn { top:20px; right:20px; width:40px; height:40px; font-size:
 .beat-display:active { opacity:0.88; }
 .beat-display.running .press-hint { color:var(--white); opacity:0.7; }
 .beat-display.running { border-color:rgba(232,160,48,0.45); }
+.beat-display.running #bpm-minus,
+.beat-display.running #bpm-plus { opacity:0.85; }
+#bpm-minus:active, #bpm-plus:active { opacity:1.0; background:rgba(232,160,48,0.25) !important; }
 /* (start btn removed) */
 .start-btn-unused {
   width:100%; padding:18px; border-radius:10px; border:none;
@@ -425,7 +430,78 @@ body.fs-mode #fs-btn { top:20px; right:20px; width:40px; height:40px; font-size:
   <div class="beat-word" id="beat-word"></div>
   <div class="subdiv-word" id="subdiv-word"></div>
   <div class="press-hint" id="press-hint" data-i18n="pressStart">Press <em>HERE</em> to <em>START</em></div>
+  <!-- Tempo nudge buttons — lower corners -->
+  <button id="bpm-minus" onclick="event.stopPropagation();nudgeBpm(-3)"
+    title="Slower (−3 BPM)"
+    style="position:absolute;bottom:0;left:0;width:80px;height:80px;border-radius:0 12px 0 0;
+           border:none;border-top:3px solid rgba(232,160,48,0.5);border-right:3px solid rgba(232,160,48,0.5);
+           background:rgba(10,10,10,0.82);
+           color:var(--gold);font-size:42px;font-weight:900;cursor:pointer;
+           display:flex;align-items:center;justify-content:center;
+           touch-action:manipulation;-webkit-tap-highlight-color:transparent;
+           opacity:0.55;transition:opacity 0.12s;">−</button>
+  <button id="bpm-plus"  onclick="event.stopPropagation();nudgeBpm(+3)"
+    title="Faster (+3 BPM)"
+    style="position:absolute;bottom:0;right:0;width:80px;height:80px;border-radius:12px 0 0 0;
+           border:none;border-top:3px solid rgba(232,160,48,0.5);border-left:3px solid rgba(232,160,48,0.5);
+           background:rgba(10,10,10,0.82);
+           color:var(--gold);font-size:42px;font-weight:900;cursor:pointer;
+           display:flex;align-items:center;justify-content:center;
+           touch-action:manipulation;-webkit-tap-highlight-color:transparent;
+           opacity:0.55;transition:opacity 0.12s;">+</button>
 </div>
+
+<!-- Voice Timing Calibration Panel — opens under beat display -->
+<div id="timing-cal-panel" style="display:none;background:rgba(10,10,10,0.97);border:1px solid rgba(232,160,48,0.3);border-radius:0 0 10px 10px;padding:12px 14px;margin-top:-1px;width:100%;box-sizing:border-box;max-width:520px;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+    <span style="font-size:10px;font-weight:900;letter-spacing:1px;color:var(--gold);">OSCILLOSCOPE — VOICE TIMING</span>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <span style="font-size:9px;color:var(--gold);">▬ beat</span>
+      <span style="font-size:9px;color:var(--orange);">▬ voice</span>
+    </div>
+  </div>
+
+  <!-- Beat trace (top) -->
+  <div style="font-size:8px;color:rgba(255,255,255,0.35);margin-bottom:2px;letter-spacing:1px;">BEAT PULSE</div>
+  <canvas id="osc-beat" width="480" height="44"
+    style="width:100%;height:44px;background:rgba(0,0,0,0.5);border-radius:4px;border:1px solid rgba(255,255,255,0.06);display:block;"></canvas>
+
+  <!-- Voice trace (bottom) -->
+  <div style="font-size:8px;color:rgba(255,255,255,0.35);margin:6px 0 2px;letter-spacing:1px;">VOICE ONSET (MIC)</div>
+  <canvas id="osc-voice" width="480" height="44"
+    style="width:100%;height:44px;background:rgba(0,0,0,0.5);border-radius:4px;border:1px solid rgba(255,255,255,0.06);display:block;"></canvas>
+
+  <div id="osc-status" style="font-size:10px;color:var(--white-dim);text-align:center;margin-top:6px;min-height:14px;">
+    Press START to enable microphone and begin measuring.
+  </div>
+
+  <div style="display:flex;gap:8px;margin-top:8px;">
+    <button id="osc-start-btn" onclick="oscStart()"
+      style="flex:1;padding:8px;font-size:12px;font-weight:900;background:rgba(136,238,136,0.15);border:1px solid var(--green-hi);border-radius:6px;color:var(--green-hi);cursor:pointer;touch-action:manipulation;">
+      START
+    </button>
+    <button onclick="oscStop()"
+      style="padding:8px 14px;background:none;border:1px solid rgba(255,255,255,0.2);border-radius:6px;color:var(--white-dim);font-size:12px;cursor:pointer;">
+      STOP
+    </button>
+    <button onclick="oscClear()"
+      style="padding:8px 14px;background:none;border:1px solid rgba(255,255,255,0.2);border-radius:6px;color:var(--white-dim);font-size:12px;cursor:pointer;">
+      CLEAR
+    </button>
+  </div>
+  <div style="font-size:9px;color:var(--white-dim);margin-top:6px;line-height:1.4;text-align:center;">
+    Adjust the Voice Timing slider until the two traces align.
+  </div>
+</div>
+
+<!-- Toggle button for timing panel -->
+<button onclick="toggleTimingPanel()" id="timing-toggle-btn"
+  style="display:block;margin:6px auto 0;font-size:10px;font-weight:900;letter-spacing:0.05em;
+         background:none;border:1px solid rgba(232,160,48,0.3);border-radius:4px;
+         color:rgba(232,160,48,0.6);padding:3px 12px;cursor:pointer;touch-action:manipulation;">
+  VOICE CALIBRATION ▾
+</button>
+
 
 <div class="controls">
 
@@ -454,12 +530,14 @@ body.fs-mode #fs-btn { top:20px; right:20px; width:40px; height:40px; font-size:
   <div class="ctrl-panel">
     <div class="ctrl-label" style="color:var(--blue)" data-i18n="timeSig">Time Signature</div>
     <div class="pill-row" id="tsig-row">
-      <button class="pill active" data-beats="4">4/4</button>
-      <button class="pill" data-beats="3">3/4</button>
-      <button class="pill" data-beats="2">2/4</button>
-      <button class="pill" data-beats="6">6/8</button>
-      <button class="pill" data-beats="5">5/4</button>
-      <button class="pill" data-beats="7">7/8</button>
+      <button class="pill active" data-beats="4" data-compound="0">4/4</button>
+      <button class="pill" data-beats="3" data-compound="0">3/4</button>
+      <button class="pill" data-beats="2" data-compound="0">2/4</button>
+      <button class="pill" data-beats="5" data-compound="0">5/4</button>
+      <button class="pill" data-beats="7" data-compound="0">7/8</button>
+      <button class="pill" data-beats="6" data-compound="1">6/8</button>
+      <button class="pill" data-beats="9" data-compound="1">9/8</button>
+      <button class="pill" data-beats="12" data-compound="1">12/8</button>
     </div>
   </div>
 
@@ -469,8 +547,41 @@ body.fs-mode #fs-btn { top:20px; right:20px; width:40px; height:40px; font-size:
       <button class="pill sm active" data-subdiv="none" data-i18n="beatOnly">Beat only</button>
       <button class="pill sm" data-subdiv="eighth" data-i18n="eighths">· and ·</button>
       <button class="pill sm" data-subdiv="sixteenth" data-i18n="sixteenths">e · and · a</button>
+      <button class="pill sm" data-subdiv="triplet" data-i18n="triplets">tri · pl · et</button>
     </div>
   </div>
+
+  <div class="ctrl-panel">
+    <div class="ctrl-label" style="color:var(--pink)" id="triplet-style-label" style="display:none">Triplet Count</div>
+    <div class="pill-row" id="triplet-style-row" style="display:none">
+      <button class="pill sm active" data-tstyle="triplet">trip-let</button>
+      <button class="pill sm" data-tstyle="solfege">la-li</button>
+      <button class="pill sm" data-tstyle="numbers">2-3</button>
+    </div>
+
+    <div class="ctrl-label" style="color:var(--green-hi)">Jazz Feel</div>
+    <div class="pill-row" id="swing-row">
+      <button class="pill sm active" data-swing="1.0">Straight</button>
+      <button class="pill sm" data-swing="1.5">Light swing</button>
+      <button class="pill sm" data-swing="2.0">Hard swing</button>
+    </div>
+  </div>
+
+  <div class="ctrl-panel">
+    <div class="ctrl-label" style="color:var(--white-mid)">Voice Timing</div>
+    <div style="display:flex;align-items:center;gap:10px;margin-top:6px;">
+      <span style="font-size:10px;color:var(--white-dim);white-space:nowrap;">−800ms</span>
+      <input type="range" id="sl-voice-offset" min="-800" max="1200" value="80" step="10"
+        style="-webkit-appearance:none;flex:1;height:5px;background:rgba(242,242,238,0.2);border-radius:3px;outline:none;touch-action:none;"
+        oninput="adjustVoiceOffset(parseInt(this.value),'set')">
+      <span style="font-size:10px;color:var(--white-dim);white-space:nowrap;">+1200ms</span>
+    </div>
+    <div style="display:flex;justify-content:center;align-items:center;gap:12px;margin-top:6px;">
+      <span id="voice-offset-display" style="font-size:14px;font-weight:900;color:var(--gold);">0 ms</span>
+      <button onclick="adjustVoiceOffset(0,'reset')" class="pill sm" style="color:var(--white-dim);">reset</button>
+    </div>
+    <div style="font-size:9px;color:var(--white-dim);margin-top:5px;line-height:1.4;">Slide left if voice lags the beat. Slide right if it fires early.</div>
+
 
   <div class="ctrl-panel">
     <div class="ctrl-label" style="color:var(--orange)" data-i18n="countStyle">Count Style</div>
@@ -544,16 +655,24 @@ body.fs-mode #fs-btn { top:20px; right:20px; width:40px; height:40px; font-size:
 </div>
 
 <script>
-const SPEED_LIMIT = 120; // above this BPM, all-beats voice is disabled
+const SPEED_LIMIT = 120; // above this BPM, all-beats voice → one-only
+const VOICE_CUTOFF = 160; // above this BPM, voice → silent
+const TRIPLET_VOICE_LIMIT = 60; // above this BPM, triplet subdivision → click only
 
 let bpm=80, beatsPerBar=4, running=false;
+let isCompound=false;  // true for 6/8, 9/8, 12/8
+let swingRatio=1.0;    // 1.0=straight, 1.5=light swing, 2.0=hard swing
+// Pending changes — applied on next beat 1
+let pendingLang=null, pendingVoice=null, pendingBeats=null, pendingCompound=null, pendingSubdiv=null;
+let tripletStyle='triplet'; // 'triplet'=trip-let, 'solfege'=la-li, 'numbers'=2-3
+let voiceOffset = 80; // ms — default offset compensates for natural TTS lag
 let audioCtx=null, nextBeatTime=0;
 let schedulerTimer=null, drawTimer=null, beatQueue=[];
 let selectedVoice=null, voiceStyle='numbers', subdivision='none', clickTone='wood';
 let currentBeatPos=1, tapTimes=[], flashEnabled=false;
 
 // beatWord() defined below uses countLang
-const subdivWords={eighth:['','and'],sixteenth:['','e','and','a']};
+const subdivWords={eighth:['','and'],sixteenth:['','e','and','a'],triplet:['','let','et']};
 
 function tempoName(b){
   if(b<40)return'Grave';if(b<60)return'Largo';if(b<66)return'Larghetto';
@@ -564,17 +683,29 @@ function tempoName(b){
 
 // Returns the effective voice style — at high speed, all-beats → one-only
 function effectiveVoiceStyle(){
-  if(voiceStyle==='numbers' && bpm>SPEED_LIMIT) return 'one-only';
+  if(voiceStyle==='silent') return 'silent';
+  // Hard cutoff — too fast for any voice
+  if(bpm > VOICE_CUTOFF) return 'silent';
+  // Triplet subdivision — voice only up to TRIPLET_VOICE_LIMIT
+  if(subdivision==='triplet' && bpm > TRIPLET_VOICE_LIMIT) return 'silent';
+  // All-beats → one-only above speed limit
+  if(voiceStyle==='numbers' && bpm > SPEED_LIMIT) return 'one-only';
   return voiceStyle;
 }
 
 function updateSpeedNotice(){
   const notice=document.getElementById('speed-notice');
   const allBtn=document.getElementById('btn-all-beats');
-  if(bpm>SPEED_LIMIT){
+  if(bpm > VOICE_CUTOFF){
+    notice.textContent = `Above ${VOICE_CUTOFF} BPM — clicks only, voice off.`;
+    allBtn.classList.add('disabled');
+  } else if(subdivision==='triplet' && bpm > TRIPLET_VOICE_LIMIT){
+    notice.textContent = `Triplet voice off above ${TRIPLET_VOICE_LIMIT} BPM — clicks only.`;
+    allBtn.classList.remove('disabled');
+  } else if(bpm > SPEED_LIMIT){
     notice.textContent=(T[uiLang]||T.en).speedWarn(SPEED_LIMIT);
     allBtn.classList.add('disabled');
-  }else{
+  } else {
     notice.textContent='';
     allBtn.classList.remove('disabled');
   }
@@ -618,6 +749,32 @@ document.getElementById('bpm-val').addEventListener('keydown', function(e){
   if(e.key === ' '){ e.stopPropagation(); }
 });
 
+
+// Initialize display on load
+window.addEventListener('load', function(){ adjustVoiceOffset(0,'set'); document.getElementById('sl-voice-offset') && (document.getElementById('sl-voice-offset').value=voiceOffset); adjustVoiceOffset(voiceOffset,'set'); });
+
+function adjustVoiceOffset(val, mode) {
+  if (mode === 'reset') voiceOffset = 0;
+  else if (mode === 'set') voiceOffset = val;
+  else voiceOffset = Math.max(-800, Math.min(1200, voiceOffset + val));
+  const el = document.getElementById('voice-offset-display');
+  if (el) el.textContent = (voiceOffset > 0 ? '+' : '') + voiceOffset + ' ms';
+  const sl = document.getElementById('sl-voice-offset');
+  if (sl && mode !== 'set') sl.value = voiceOffset;
+}
+
+function nudgeBpm(delta) {
+  const v = Math.max(30, Math.min(240, bpm + delta));
+  bpm = v;
+  const inp = document.getElementById('bpm-val');
+  const sl  = document.getElementById('sl-bpm');
+  if(inp) inp.value = v;
+  if(sl)  sl.value  = v;
+  const tn = document.getElementById('tempo-name');
+  if(tn) tn.textContent = tempoName(v);
+  updateSpeedNotice();
+  // No nextBeatTime reset — change takes effect gradually, less jarring
+}
 function tapTempo(){
   const now=Date.now();
   tapTimes=tapTimes.filter(t=>now-t<3000); tapTimes.push(now);
@@ -673,9 +830,14 @@ function scheduleClick(time, beat, subLevel){
   // In sounds mode — suppress beat clicks, but keep subdivision ticks
   if(voiceStyle === 'sounds' && subLevel === 0) return;
   const isOne = (beat === 1);
+  // Compound accents: beat 1 = strong, group downbeats = medium
+  const compoundGroup = isCompound ? (beatsPerBar === 6 ? 3 : beatsPerBar === 9 ? 3 : 3) : 1;
+  const isGroupBeat = isCompound && beat > 1 && ((beat - 1) % compoundGroup === 0);
   if(subLevel>0 && subdivision==='none') return;
   if(subLevel===0){
-    playClick(time, isOne ? 1.0 : 0.60, isOne ? 1.0 : 0.85, beat);
+    const vol = isOne ? 1.0 : isGroupBeat ? 0.75 : isCompound ? 0.35 : 0.60;
+    const rate = isOne ? 1.0 : isGroupBeat ? 0.90 : 0.85;
+    playClick(time, vol, rate, beat);
   }else if(subLevel===1){
     playClick(time, 0.30, 0.75, 0);
   }else{
@@ -1014,10 +1176,22 @@ function synthBird(beat, vol) {
   }
 }
 
-function speakBeat(beat, scheduledTime){
+function speakBeat(beat, scheduledTime, tripletSyllable){
   const t = scheduledTime || (audioCtx ? audioCtx.currentTime : 0);
   const style=effectiveVoiceStyle();
   if(style==='silent') return;
+
+  // Speak triplet syllable ("trip" or "let") at slow tempos
+  if(tripletSyllable && subdivision==='triplet' && bpm <= TRIPLET_VOICE_LIMIT){
+    const u = new SpeechSynthesisUtterance(tripletSyllable);
+    u.rate = Math.max(1.2, Math.min(2.2, bpm / 30));
+    u.pitch = 0.85;
+    u.volume = 0.65;
+    if(selectedVoice){ u.voice=selectedVoice; u.lang=selectedVoice.lang; }
+    else { u.lang=countLang; }
+    window.speechSynthesis.speak(u);
+    return;
+  }
 
   // ── ACCENT mode: 1 loud, rest barely audible but spoken (keeps engine warm) ──
   if(style==='accent'){
@@ -1124,7 +1298,7 @@ function flashBeat(beat){
 }
 
 function getSubdivCount(){
-  if(subdivision==='eighth')return 2; if(subdivision==='sixteenth')return 4; return 1;
+  if(subdivision==='eighth')return 2; if(subdivision==='sixteenth')return 4; if(subdivision==='triplet')return 3; return 1;
 }
 
 function scheduler(){
@@ -1132,15 +1306,51 @@ function scheduler(){
   const subdivCount=getSubdivCount();
   const beatDur=60.0/bpm;
   const subDur=beatDur/subdivCount;
-  while(nextBeatTime<audioCtx.currentTime+0.15){
+  const _lookahead = 0.25 + (voiceOffset < 0 ? (-voiceOffset/1000) + 0.15 : 0);
+  while(nextBeatTime<audioCtx.currentTime+_lookahead){
     const beat=currentBeatPos;
+    // Apply any pending changes on beat 1
+    if(beat === 1){
+      if(pendingLang !== null){ applyLang(pendingLang); pendingLang=null; }
+      if(pendingVoice !== null){ selectedVoice=pendingVoice; pendingVoice=null; }
+      if(pendingBeats !== null){
+        beatsPerBar=pendingBeats; isCompound=pendingCompound||false;
+        pendingBeats=null; pendingCompound=null;
+        buildPips();
+        if(pendingSubdiv){
+          subdivision=pendingSubdiv; pendingSubdiv=null;
+          document.querySelectorAll('#subdiv-row .pill').forEach(b=>b.classList.remove('active'));
+          const btn=document.querySelector('#subdiv-row [data-subdiv="'+subdivision+'"]');
+          if(btn) btn.classList.add('active');
+          updateSpeedNotice();
+        }
+      }
+    }
     scheduleClick(nextBeatTime,beat,0);
     beatQueue.push({beat, time:nextBeatTime});
-    // Subdivision pops — audio only, no queue entry
+    // Voice offset handled in drawLoop via early trigger threshold
+    // Subdivision pops — audio, and queue entry for triplet voice
     for(let s=1;s<subdivCount;s++){
-      const st=nextBeatTime+s*subDur;
-      const level=(subdivision==='sixteenth'&&s===2)?1 : (subdivision==='eighth'&&s===1)?1 : 2;
+      // Swing: first sub-beat pushed later by swing ratio (only for eighth/16th straight)
+      let st;
+      if(swingRatio > 1.0 && subdivCount === 2 && subdivision === 'eighth'){
+        // Swing timing: downbeat at 0, upbeat at beatDur * ratio/(ratio+1)
+        st = nextBeatTime + beatDur * (swingRatio / (swingRatio + 1));
+      } else {
+        st = nextBeatTime + s * subDur;
+      }
+      const level=(subdivision==='sixteenth'&&s===2)?1 : (subdivision==='eighth'&&s===1)?1 : (subdivision==='triplet')?1 : 2;
       scheduleClick(st,0,level);
+      // Queue triplet sub-beats for spoken counting at slow tempos
+      if(subdivision==='triplet' && bpm <= TRIPLET_VOICE_LIMIT){
+        const syls = {
+          triplet: ['trip','let'],
+          solfege:  ['la',  'li'],
+          numbers:  ['2',   '3']
+        };
+        const pair = syls[tripletStyle] || syls.triplet;
+        beatQueue.push({beat:0, tripletSyllable: pair[s-1], time:st});
+      }
     }
     nextBeatTime+=beatDur;
     currentBeatPos++;
@@ -1151,10 +1361,21 @@ function scheduler(){
 
 function drawLoop(){
   const now=audioCtx?audioCtx.currentTime:0;
-  while(beatQueue.length && beatQueue[0].time<=now+0.015){
+  // Voice offset: fire speech early (negative) or late (positive)
+  // Negative offset means trigger speech earlier than the beat
+  const _voiceAdvance = 0.015 + (-voiceOffset / 1000); // seconds before beat to speak
+  while(beatQueue.length && beatQueue[0].time <= now + _voiceAdvance){
     const ev=beatQueue.shift();
+    if(ev.beat > 0) { _lastBeatTime = audioCtx ? audioCtx.currentTime * 1000 : null; _oscRecordBeat(); }
     flashBeat(ev.beat);
-    speakBeat(ev.beat, ev.time);
+    if (voiceOffset > 0) {
+      // Positive offset: delay speech after beat fires
+      const _beat = ev.beat, _time = ev.time, _syl = ev.tripletSyllable;
+      setTimeout(function(){ speakBeat(_beat, _time, _syl); }, voiceOffset);
+    } else {
+      // Zero or negative offset: speak now (negative already triggered early via threshold)
+      speakBeat(ev.beat, ev.time, ev.tripletSyllable);
+    }
   }
   drawTimer=requestAnimationFrame(drawLoop);
 }
@@ -1225,14 +1446,48 @@ document.getElementById('sl-bpm').addEventListener('input',function(){
 
 document.querySelectorAll('#tsig-row .pill').forEach(btn=>btn.addEventListener('click',function(){
   document.querySelectorAll('#tsig-row .pill').forEach(b=>b.classList.remove('active'));
-  this.classList.add('active'); beatsPerBar=parseInt(this.dataset.beats);
-  currentBeatPos=1; beatQueue=[]; buildPips();
-  if(running)nextBeatTime=audioCtx.currentTime+0.05;
+  this.classList.add('active');
+  const newBeats = parseInt(this.dataset.beats);
+  const newCompound = (this.dataset.compound === '1');
+  if(running){
+    // Queue — apply on next beat 1
+    pendingBeats = newBeats;
+    pendingCompound = newCompound;
+    if(newCompound) pendingSubdiv = 'triplet';
+  } else {
+    beatsPerBar = newBeats;
+    isCompound = newCompound;
+    currentBeatPos=1; beatQueue=[]; buildPips();
+    if(isCompound){
+      document.querySelectorAll('#subdiv-row .pill').forEach(b=>b.classList.remove('active'));
+      const tripBtn = document.querySelector('#subdiv-row [data-subdiv="triplet"]');
+      if(tripBtn){ tripBtn.classList.add('active'); subdivision='triplet'; }
+    }
+    updateSpeedNotice();
+  }
+}));
+
+document.querySelectorAll('#triplet-style-row .pill').forEach(btn=>btn.addEventListener('click',function(){
+  document.querySelectorAll('#triplet-style-row .pill').forEach(b=>b.classList.remove('active'));
+  this.classList.add('active');
+  tripletStyle = this.dataset.tstyle;
+}));
+
+document.querySelectorAll('#swing-row .pill').forEach(btn=>btn.addEventListener('click',function(){
+  document.querySelectorAll('#swing-row .pill').forEach(b=>b.classList.remove('active'));
+  this.classList.add('active');
+  swingRatio = parseFloat(this.dataset.swing);
+  beatQueue=[]; if(running)nextBeatTime=audioCtx.currentTime+0.05;
 }));
 
 document.querySelectorAll('#subdiv-row .pill').forEach(btn=>btn.addEventListener('click',function(){
   document.querySelectorAll('#subdiv-row .pill').forEach(b=>b.classList.remove('active'));
-  this.classList.add('active'); subdivision=this.dataset.subdiv;
+  this.classList.add('active'); subdivision=this.dataset.subdiv; updateSpeedNotice();
+  const show = subdivision==='triplet';
+  const tRow = document.getElementById('triplet-style-row');
+  const tLbl = document.getElementById('triplet-style-label');
+  if(tRow) tRow.style.display = show ? '' : 'none';
+  if(tLbl) tLbl.style.display = show ? '' : 'none';
   beatQueue=[]; if(running)nextBeatTime=audioCtx.currentTime+0.05;
 }));
 
@@ -1313,6 +1568,7 @@ const T = {
     beatOnly:    'Beat only',
     eighths:     '· and ·',
     sixteenths:  'e · and · a',
+    triplets:    'tri · pl · et',
     countStyle:  'Count Style',
     allBeats:    'All beats',
     oneOnly:     'One only',
@@ -1330,12 +1586,13 @@ const T = {
     female:      '♀ Female',
     male:        '♂ Male',
     tapBtn:      'Tap <em>HERE</em> to Set Tempo',
-    speedWarn:   (lim) => `Above ${lim} BPM, voice counts beat 1 only.`,
+    speedWarn:   (lim) => `Above ${lim} BPM, voice counts beat 1 only. Above ${VOICE_CUTOFF} BPM, clicks only.`,
+    tripletWarn: `Triplet voice off above ${TRIPLET_VOICE_LIMIT} BPM — clicks take over.`,
     helpTitle:   'How to use',
     help: [
       `<span class="hl-gold">Tap the green panel</span> or press <span class="hl-gold">spacebar</span> to start and stop.`,
       `<span class="hl-blue">Time Signature</span> sets how many beats are in each bar. Beat 1 is always accented.`,
-      `<span class="hl-pink">Subdivision</span> adds quiet in-between clicks — 8th or 16th notes — so you can feel the pulse without counting them aloud.`,
+      `<span class="hl-pink">Subdivision</span> adds quiet in-between clicks — 8th notes, 16th notes, or triplets. At slow tempos, triplet mode speaks <em>one-trip-let, two-trip-let</em> to help internalize the feel.`,
       `<span class="hl-orange">Count Style</span> controls what the voice says. <em>All beats</em> counts every beat. <em>One only</em> calls the downbeat only — useful at fast tempos. <em>Silent</em> lets the clicks do the work.`,
       `<span class="hl-green">Click Tone</span> changes the sound of the click. Try <em>Bell</em> for a chime, <em>Beep</em> for a classic electronic feel, or <em>Soft</em> for quiet practice.`,
       `<span class="hl-gold">Tap <em>HERE</em> to Set Tempo</span> — tap the button repeatedly in time and the BPM will lock to your tapping.`,
@@ -1353,6 +1610,7 @@ const T = {
     subdiv:      'Subdivisión',
     beatOnly:    'Solo pulso',
     eighths:     '· y ·',
+    triplets:    'tri · pl · et',
     sixteenths:  'e · y · a',
     countStyle:  'Estilo de cuenta',
     allBeats:    'Todos los tiempos',
@@ -1393,6 +1651,7 @@ const T = {
     subdiv:      'Subdivision',
     beatOnly:    'Temps seul',
     eighths:     '· et ·',
+    triplets:    'tri · pl · et',
     sixteenths:  'e · et · a',
     countStyle:  'Style de compte',
     allBeats:    'Tous les temps',
@@ -1433,6 +1692,7 @@ const T = {
     subdiv:      'Unterteilung',
     beatOnly:    'Nur Schlag',
     eighths:     '· und ·',
+    triplets:    'tri · pl · et',
     sixteenths:  'e · und · a',
     countStyle:  'Zählweise',
     allBeats:    'Alle Schläge',
@@ -1473,6 +1733,7 @@ const T = {
     subdiv:      'Suddivisione',
     beatOnly:    'Solo battuta',
     eighths:     '· e ·',
+    triplets:    'tri · pl · et',
     sixteenths:  'e · e · a',
     countStyle:  'Stile di conteggio',
     allBeats:    'Tutti i tempi',
@@ -1513,6 +1774,7 @@ const T = {
     subdiv:      '細分化',
     beatOnly:    '拍のみ',
     eighths:     '· と ·',
+    triplets:    'tri · pl · et',
     sixteenths:  'e · と · a',
     countStyle:  'カウントスタイル',
     allBeats:    '全拍',
@@ -1558,6 +1820,7 @@ const T_EXTRA = {
     subdiv: "Subdivisão",
     beatOnly: "Só o pulso",
     eighths: "· e ·",
+    triplets:    'tri · pl · et',
     sixteenths: "e · e · a",
     countStyle: "Estilo de contagem",
     allBeats: "Todos os tempos",
@@ -1598,6 +1861,7 @@ const T_EXTRA = {
     subdiv: "细分",
     beatOnly: "仅拍子",
     eighths: "· 和 ·",
+    triplets:    'tri · pl · et',
     sixteenths: "e · 和 · a",
     countStyle: "计数方式",
     allBeats: "每拍",
@@ -1638,6 +1902,7 @@ const T_EXTRA = {
     subdiv: "세분화",
     beatOnly: "박자만",
     eighths: "· 과 ·",
+    triplets:    'tri · pl · et',
     sixteenths: "e · 과 · a",
     countStyle: "카운트 방식",
     allBeats: "모든 박자",
@@ -1678,6 +1943,7 @@ const T_EXTRA = {
     subdiv: "التقسيم الفرعي",
     beatOnly: "النبضة فقط",
     eighths: "· و ·",
+    triplets:    'tri · pl · et',
     sixteenths: "e · و · a",
     countStyle: "أسلوب العدّ",
     allBeats: "جميع النبضات",
@@ -1718,6 +1984,7 @@ const T_EXTRA = {
     subdiv: "Деление",
     beatOnly: "Только удар",
     eighths: "· и ·",
+    triplets:    'tri · pl · et',
     sixteenths: "e · и · a",
     countStyle: "Стиль счёта",
     allBeats: "Все удары",
@@ -1758,6 +2025,7 @@ const T_EXTRA = {
     subdiv: "Onderverdeling",
     beatOnly: "Alleen slag",
     eighths: "· en ·",
+    triplets:    'tri · pl · et',
     sixteenths: "e · en · a",
     countStyle: "Telstijl",
     allBeats: "Alle slagen",
@@ -1798,6 +2066,7 @@ const T_EXTRA = {
     subdiv: "Podział",
     beatOnly: "Tylko uderzenie",
     eighths: "· i ·",
+    triplets:    'tri · pl · et',
     sixteenths: "e · i · a",
     countStyle: "Styl liczenia",
     allBeats: "Wszystkie uderzenia",
@@ -1838,6 +2107,7 @@ const T_EXTRA = {
     subdiv: "Indelning",
     beatOnly: "Bara slag",
     eighths: "· och ·",
+    triplets:    'tri · pl · et',
     sixteenths: "e · och · a",
     countStyle: "Räknesätt",
     allBeats: "Alla slag",
@@ -1878,6 +2148,7 @@ const T_EXTRA = {
     subdiv: "Inndeling",
     beatOnly: "Bare slag",
     eighths: "· og ·",
+    triplets:    'tri · pl · et',
     sixteenths: "e · og · a",
     countStyle: "Tellemåte",
     allBeats: "Alle slag",
@@ -1918,6 +2189,7 @@ const T_EXTRA = {
     subdiv: "Inddeling",
     beatOnly: "Kun slag",
     eighths: "· og ·",
+    triplets:    'tri · pl · et',
     sixteenths: "e · og · a",
     countStyle: "Tællemåde",
     allBeats: "Alle slag",
@@ -1958,6 +2230,7 @@ const T_EXTRA = {
     subdiv: "Jaottelu",
     beatOnly: "Vain isku",
     eighths: "· ja ·",
+    triplets:    'tri · pl · et',
     sixteenths: "e · ja · a",
     countStyle: "Laskutapa",
     allBeats: "Kaikki iskut",
@@ -1998,6 +2271,7 @@ const T_EXTRA = {
     subdiv: "Dělení",
     beatOnly: "Jen doba",
     eighths: "· a ·",
+    triplets:    'tri · pl · et',
     sixteenths: "e · a · a",
     countStyle: "Styl počítání",
     allBeats: "Všechny doby",
@@ -2038,6 +2312,7 @@ const T_EXTRA = {
     subdiv: "Delenie",
     beatOnly: "Len doba",
     eighths: "· a ·",
+    triplets:    'tri · pl · et',
     sixteenths: "e · a · a",
     countStyle: "Štýl počítania",
     allBeats: "Všetky doby",
@@ -2078,6 +2353,7 @@ const T_EXTRA = {
     subdiv: "Subdiviziune",
     beatOnly: "Doar bătaie",
     eighths: "· și ·",
+    triplets:    'tri · pl · et',
     sixteenths: "e · și · a",
     countStyle: "Stil de numărare",
     allBeats: "Toate bătăile",
@@ -2118,6 +2394,7 @@ const T_EXTRA = {
     subdiv: "Felosztás",
     beatOnly: "Csak ütés",
     eighths: "· és ·",
+    triplets:    'tri · pl · et',
     sixteenths: "e · és · a",
     countStyle: "Számolási stílus",
     allBeats: "Minden ütés",
@@ -2158,6 +2435,7 @@ const T_EXTRA = {
     subdiv: "Podjela",
     beatOnly: "Samo udar",
     eighths: "· i ·",
+    triplets:    'tri · pl · et',
     sixteenths: "e · i · a",
     countStyle: "Stil brojanja",
     allBeats: "Svi udari",
@@ -2198,6 +2476,7 @@ const T_EXTRA = {
     subdiv: "Υποδιαίρεση",
     beatOnly: "Μόνο χτύπος",
     eighths: "· και ·",
+    triplets:    'tri · pl · et',
     sixteenths: "e · και · a",
     countStyle: "Στυλ μέτρησης",
     allBeats: "Όλοι οι χτύποι",
@@ -2238,6 +2517,7 @@ const T_EXTRA = {
     subdiv: "Alt Bölüm",
     beatOnly: "Sadece vuruş",
     eighths: "· ve ·",
+    triplets:    'tri · pl · et',
     sixteenths: "e · ve · a",
     countStyle: "Sayım Stili",
     allBeats: "Tüm vuruşlar",
@@ -2278,6 +2558,7 @@ const T_EXTRA = {
     subdiv: "תת-חלוקה",
     beatOnly: "פעימה בלבד",
     eighths: "· ו ·",
+    triplets:    'tri · pl · et',
     sixteenths: "e · ו · a",
     countStyle: "סגנון ספירה",
     allBeats: "כל הפעימות",
@@ -2318,6 +2599,7 @@ const T_EXTRA = {
     subdiv: "उपविभाजन",
     beatOnly: "केवल बीट",
     eighths: "· और ·",
+    triplets:    'tri · pl · et',
     sixteenths: "e · और · a",
     countStyle: "गिनती शैली",
     allBeats: "सभी बीट",
@@ -2358,6 +2640,7 @@ const T_EXTRA = {
     subdiv: "Subdivisi",
     beatOnly: "Hanya ketukan",
     eighths: "· dan ·",
+    triplets:    'tri · pl · et',
     sixteenths: "e · dan · a",
     countStyle: "Gaya Hitungan",
     allBeats: "Semua ketukan",
@@ -2398,6 +2681,7 @@ const T_EXTRA = {
     subdiv: "Pembahagian",
     beatOnly: "Rentak sahaja",
     eighths: "· dan ·",
+    triplets:    'tri · pl · et',
     sixteenths: "e · dan · a",
     countStyle: "Gaya Kiraan",
     allBeats: "Semua rentak",
@@ -2438,6 +2722,7 @@ const T_EXTRA = {
     subdiv: "การแบ่งย่อย",
     beatOnly: "แค่จังหวะ",
     eighths: "· และ ·",
+    triplets:    'tri · pl · et',
     sixteenths: "e · และ · a",
     countStyle: "รูปแบบการนับ",
     allBeats: "ทุกจังหวะ",
@@ -2478,6 +2763,7 @@ const T_EXTRA = {
     subdiv: "Phân nhịp",
     beatOnly: "Chỉ phách",
     eighths: "· và ·",
+    triplets:    'tri · pl · et',
     sixteenths: "e · và · a",
     countStyle: "Kiểu đếm",
     allBeats: "Tất cả phách",
@@ -2518,6 +2804,7 @@ const T_EXTRA = {
     subdiv: "Ділення",
     beatOnly: "Тільки удар",
     eighths: "· і ·",
+    triplets:    'tri · pl · et',
     sixteenths: "e · і · a",
     countStyle: "Стиль рахунку",
     allBeats: "Усі удари",
@@ -2558,6 +2845,7 @@ const T_EXTRA = {
     subdiv: "細分",
     beatOnly: "僅拍子",
     eighths: "· 和 ·",
+    triplets:    'tri · pl · et',
     sixteenths: "e · 和 · a",
     countStyle: "計數方式",
     allBeats: "每拍",
@@ -2809,14 +3097,22 @@ document.getElementById('voice-gender-row').querySelectorAll('.pill').forEach(bt
 
 // Language select is populated at init and wired here
 document.getElementById('lang-select').addEventListener('change', function(){
-  applyLang(this.value);
+  if(running){
+    pendingLang = this.value;
+  } else {
+    applyLang(this.value);
+  }
 });
 
 document.getElementById('voice-select').addEventListener('change', function(){
-  // Prefer the stored voice object from populateVoices; fall back to fresh lookup
   const allV = window.speechSynthesis.getVoices();
-  selectedVoice = allV.find(v => v.name === this.value) || null;
-  if(!selectedVoice) console.warn('Voice not found:', this.value);
+  const v = allV.find(v => v.name === this.value) || null;
+  if(running){
+    pendingVoice = v;
+  } else {
+    selectedVoice = v;
+    if(!selectedVoice) console.warn('Voice not found:', this.value);
+  }
 });
 
 // Voices: Safari/iOS loads them async — try immediately, also hook onvoiceschanged
@@ -2891,5 +3187,165 @@ document.addEventListener('keydown', function(e){
   }
 });
 </script>
+
+<script>
+// ── OSCILLOSCOPE — VOICE TIMING ───────────────────────────────────────
+let _oscRunning = false;
+let _micStream = null;
+let _micCtx = null;
+let _micAnalyser = null;
+let _oscBeatPulses = [];   // {t: audioCtx.currentTime}
+let _oscVoicePulses = [];  // {t: performance.now()} from mic detection
+let _oscAnimFrame = null;
+let _lastBeatTime = null;
+let _tapOffsets = [], _voiceFireTimes = [];
+
+const OSC_WINDOW = 4.0; // seconds of history shown
+const OSC_THRESHOLD = 0.08; // mic energy threshold for voice detection
+const OSC_COOLDOWN = 0.15;  // seconds between voice detections
+let _lastVoiceDetect = 0;
+
+async function oscStart() {
+  if (_oscRunning) return;
+  const btn = document.getElementById('osc-start-btn');
+  const status = document.getElementById('osc-status');
+  if (status) status.textContent = 'Requesting microphone access...';
+  try {
+    _micStream = await navigator.mediaDevices.getUserMedia({ audio: {
+      echoCancellation: false,
+      noiseSuppression: false,
+      autoGainControl: false
+    }, video: false });
+  } catch(e) {
+    if (status) status.textContent = 'Microphone denied. Cannot measure voice timing.';
+    return;
+  }
+  _micCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const src = _micCtx.createMediaStreamSource(_micStream);
+  _micAnalyser = _micCtx.createAnalyser();
+  _micAnalyser.fftSize = 256;
+  src.connect(_micAnalyser);
+  _oscRunning = true;
+  if (btn) { btn.textContent = 'RUNNING'; btn.style.background = 'rgba(136,238,136,0.3)'; }
+  if (status) status.textContent = 'Listening. Start the metronome and speak clearly.';
+  oscClear();
+  _oscDetectLoop();
+  _oscDrawLoop();
+}
+
+function oscStop() {
+  _oscRunning = false;
+  if (_micStream) { _micStream.getTracks().forEach(t => t.stop()); _micStream = null; }
+  if (_micCtx) { _micCtx.close(); _micCtx = null; }
+  if (_oscAnimFrame) { cancelAnimationFrame(_oscAnimFrame); _oscAnimFrame = null; }
+  const btn = document.getElementById('osc-start-btn');
+  const status = document.getElementById('osc-status');
+  if (btn) { btn.textContent = 'START'; btn.style.background = 'rgba(136,238,136,0.15)'; }
+  if (status) status.textContent = 'Stopped. Press START to measure again.';
+}
+
+function oscClear() {
+  _oscBeatPulses = []; _oscVoicePulses = [];
+  _drawOscCanvas('osc-beat', _oscBeatPulses, '#e8a030');
+  _drawOscCanvas('osc-voice', _oscVoicePulses, '#e87030');
+}
+
+function _oscDetectLoop() {
+  if (!_oscRunning || !_micAnalyser) return;
+  const buf = new Uint8Array(_micAnalyser.frequencyBinCount);
+  _micAnalyser.getByteTimeDomainData(buf);
+  let rms = 0;
+  for (let i = 0; i < buf.length; i++) { const v = (buf[i]-128)/128; rms += v*v; }
+  rms = Math.sqrt(rms / buf.length);
+
+  const now = performance.now() / 1000;
+  if (rms > OSC_THRESHOLD && (now - _lastVoiceDetect) > OSC_COOLDOWN) {
+    _lastVoiceDetect = now;
+    _oscVoicePulses.push({t: now});
+    if (_oscVoicePulses.length > 60) _oscVoicePulses.shift();
+  }
+  setTimeout(_oscDetectLoop, 8); // ~120fps polling
+}
+
+// Called from drawLoop when a beat fires
+function _oscRecordBeat() {
+  if (!_oscRunning) return;
+  _oscBeatPulses.push({t: performance.now() / 1000});
+  if (_oscBeatPulses.length > 60) _oscBeatPulses.shift();
+}
+
+function _drawOscCanvas(id, pulses, color) {
+  const canvas = document.getElementById(id);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  // Baseline
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0, H/2); ctx.lineTo(W, H/2); ctx.stroke();
+
+  // Pulses — scrolling window
+  const now = performance.now() / 1000;
+  const winStart = now - OSC_WINDOW;
+  ctx.fillStyle = color;
+  pulses.forEach(p => {
+    if (p.t < winStart) return;
+    const x = ((p.t - winStart) / OSC_WINDOW) * W;
+    // Draw pulse: vertical spike from baseline
+    ctx.beginPath();
+    ctx.moveTo(x, H/2);
+    ctx.lineTo(x, H * 0.05);
+    ctx.lineTo(x+2, H * 0.05);
+    ctx.lineTo(x+2, H/2);
+    ctx.fill();
+  });
+
+  // Scrolling time cursor
+  ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(W-1, 0); ctx.lineTo(W-1, H); ctx.stroke();
+}
+
+function _oscDrawLoop() {
+  if (!_oscRunning) return;
+  _drawOscCanvas('osc-beat',  _oscBeatPulses,  '#e8a030');
+  _drawOscCanvas('osc-voice', _oscVoicePulses, '#e87030');
+
+  // Measure avg gap between nearest beat/voice pairs
+  if (_oscBeatPulses.length > 2 && _oscVoicePulses.length > 2) {
+    const gaps = [];
+    _oscVoicePulses.slice(-8).forEach(vp => {
+      let closest = null, minD = 99;
+      _oscBeatPulses.forEach(bp => {
+        const d = Math.abs(vp.t - bp.t);
+        if (d < minD) { minD = d; closest = bp; }
+      });
+      if (closest && minD < 1.5) gaps.push((vp.t - closest.t) * 1000);
+    });
+    if (gaps.length > 1) {
+      const avg = Math.round(gaps.reduce((a,b)=>a+b,0)/gaps.length);
+      const status = document.getElementById('osc-status');
+      if (status) status.textContent = 'Voice offset from beat: ' + (avg>=0?'+':'') + avg + 'ms  (' + gaps.length + ' samples)';
+    }
+  }
+
+  _oscAnimFrame = requestAnimationFrame(_oscDrawLoop);
+}
+
+function toggleTimingPanel() {
+  const panel = document.getElementById('timing-cal-panel');
+  const btn = document.getElementById('timing-toggle-btn');
+  if (!panel) return;
+  const open = panel.style.display === 'none' || panel.style.display === '';
+  panel.style.display = open ? 'block' : 'none';
+  if (btn) btn.innerHTML = open ? 'VOICE CALIBRATION ▴' : 'VOICE CALIBRATION ▾';
+  if (!open) oscStop();
+}
+
+function tapCalReset() { _tapOffsets = []; }
+</script>
+
 </body>
 </html>
