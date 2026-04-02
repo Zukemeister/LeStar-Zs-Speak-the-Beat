@@ -488,6 +488,7 @@ body.fs-mode #fs-btn { top:20px; right:20px; width:40px; height:40px; font-size:
   <!-- Device lag readout -->
   <div style="text-align:center;margin-bottom:12px;">
     <span id="lag-device-text" style="font-size:16px;font-weight:900;color:var(--white);">Measuring device lag...</span>
+    <br><button onclick="_measureLagNow()" style="margin-top:6px;padding:4px 12px;font-size:10px;background:none;border:1px solid rgba(255,255,255,0.2);border-radius:4px;color:rgba(255,255,255,0.4);cursor:pointer;">tap to measure</button>
   </div>
 
   <!-- Arrows display -->
@@ -3290,13 +3291,13 @@ function _oscRecordBeat() {
 function _updateLagDisplay() {
   const el = document.getElementById('lag-readout');
   if (!el) return;
-  if (!_measuredLags.length) { el.textContent = '—'; return; }
+  if (!_measuredLags.length) { el.textContent = 'Measuring...'; return; }
   const avg = Math.round(_measuredLags.reduce((a,b)=>a+b,0)/_measuredLags.length);
   const sim = simulatedLatency > 0 ? ' (incl. +'+simulatedLatency+'ms sim)' : '';
   el.textContent = avg + 'ms' + sim;
   el.style.color = avg < 50 ? '#88ee88' : avg < 150 ? '#e8a030' : '#e87070';
   // Auto mode: apply compensation, keep voiceOffset=0 for display
-  if (_measuredLags.length >= 3 && correctionMode === 'auto') {
+  if (_measuredLags.length >= 1 && correctionMode === 'auto') {
     // Audio compensation handled by scheduler using avgLag directly
     voiceOffset = 0; // display shows 0 = in sync
   }
@@ -3337,7 +3338,7 @@ function _drawCombined() {
   if (!display) return;
   const SVG_W = 480;
 
-  const avgLag = _measuredLags.length >= 3
+  const avgLag = _measuredLags.length >= 1
     ? Math.round(_measuredLags.reduce((a,b)=>a+b,0)/_measuredLags.length)
     : null;
 
@@ -3384,7 +3385,7 @@ function _drawCombined() {
   const lagEl = document.getElementById('lag-device-text');
   if (lagEl) {
     if (avgLag === null) {
-      lagEl.textContent = 'Measuring device lag — start the metronome';
+      lagEl.textContent = 'Tap here to measure lag →';
       lagEl.style.color = 'rgba(255,255,255,0.4)';
     } else {
       lagEl.textContent = 'Your device is lagging ' + avgLag + 'ms';
@@ -3560,23 +3561,30 @@ function setCorrectionMode(mode) {
 
 function _measureLagNow() {
   if (!window.speechSynthesis) return;
-  var u = new SpeechSynthesisUtterance('');
-  u.volume = 0; // silent
-  u.rate = 2;
-  var t = performance.now();
-  var done = false;
-  function record() {
-    if (done) return; done = true;
-    var lag = performance.now() - t;
-    _measuredLags.push(lag);
-    if (_measuredLags.length > 12) _measuredLags.shift();
-    _updateLagDisplay();
-    _drawCombined();
-  }
-  u.onstart = record;
-  u.addEventListener('start', record);
-  setTimeout(function(){ if (!done) record(); }, 1500);
-  window.speechSynthesis.speak(u);
+  // Fire 3 quick test utterances to get enough samples
+  // Use a real word at very low volume — iOS rejects empty/silent utterances
+  var words = ['test','check','ready'];
+  words.forEach(function(word, i) {
+    setTimeout(function() {
+      var u = new SpeechSynthesisUtterance(word);
+      u.volume = 0.01;
+      u.rate = 2;
+      var t = performance.now();
+      var done = false;
+      function record() {
+        if (done) return; done = true;
+        var lag = performance.now() - t;
+        _measuredLags.push(lag);
+        if (_measuredLags.length > 12) _measuredLags.shift();
+        _updateLagDisplay();
+        _drawCombined();
+      }
+      u.onstart = record;
+      u.addEventListener('start', record);
+      setTimeout(function(){ if (!done) record(); }, 1200);
+      window.speechSynthesis.speak(u);
+    }, i * 400);
+  });
 }
 
 function toggleCalHelp() {
