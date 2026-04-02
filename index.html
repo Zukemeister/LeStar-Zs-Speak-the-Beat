@@ -3590,19 +3590,31 @@ function setSimLatency(ms) {
 (function(){
   var _origSpeak = window.speechSynthesis.speak.bind(window.speechSynthesis);
   window.speechSynthesis.speak = function(u) {
-    var _callTime = performance.now(); // when we requested speech
-    var _origStart = u.onstart;
-    u.onstart = function(e) {
-      // Measure actual TTS latency
+    var _callTime = performance.now();
+    var _fired = false;
+    function _recordLag() {
+      if (_fired) return; _fired = true;
       var _lag = performance.now() - _callTime;
       _measuredLags.push(_lag);
       if (_measuredLags.length > 12) _measuredLags.shift();
       _updateLagDisplay();
       _oscRecordVoice();
-      if (_origStart) _origStart(e);
-    };
+    }
+    // Hook both onstart property and addEventListener for broad compatibility
+    var _origStart = u.onstart;
+    u.onstart = function(e) { _recordLag(); if (_origStart) _origStart(e); };
+    u.addEventListener('start', _recordLag);
+    // Fallback: if neither fires within 600ms, estimate from elapsed time
+    setTimeout(function() {
+      if (!_fired && _measuredLags.length < 12) {
+        _fired = true;
+        var _lag = performance.now() - _callTime;
+        _measuredLags.push(_lag);
+        if (_measuredLags.length > 12) _measuredLags.shift();
+        _updateLagDisplay();
+      }
+    }, 600);
     if (simulatedLatency > 0) {
-      // Simulate a slow device by delaying the actual speak call
       setTimeout(function(){ _origSpeak(u); }, simulatedLatency);
     } else {
       _origSpeak(u);
