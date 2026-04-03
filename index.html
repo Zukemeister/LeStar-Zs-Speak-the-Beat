@@ -430,6 +430,7 @@ body.fs-mode #fs-btn { top:20px; right:20px; width:40px; height:40px; font-size:
   <div class="beat-word" id="beat-word"></div>
   <div class="subdiv-word" id="subdiv-word"></div>
   <div class="press-hint" id="press-hint" data-i18n="pressStart">Press <em>HERE</em> to <em>START</em></div>
+  <div style="font-size:10px;color:rgba(232,160,48,0.5);margin-top:4px;text-align:center;pointer-events:none;" id="warmup-note">There is a 3 second silent warm-up after you press Start.</div>
   <!-- Tempo nudge buttons — lower corners -->
   <button id="bpm-minus" onclick="event.stopPropagation();nudgeBpm(-3)"
     title="Slower (−3 BPM)"
@@ -621,7 +622,7 @@ body.fs-mode #fs-btn { top:20px; right:20px; width:40px; height:40px; font-size:
   <div style="display:none;">
     <input type="range" id="sl-voice-offset" min="0" max="400" value="15" step="5">
     <span id="voice-offset-display"></span>
-
+  </div>
 
   <div class="ctrl-panel">
     <div class="ctrl-label" style="color:var(--orange)" data-i18n="countStyle">Count Style</div>
@@ -712,6 +713,7 @@ let audioCtx=null, nextBeatTime=0;
 let schedulerTimer=null, drawTimer=null, beatQueue=[];
 let selectedVoice=null, voiceStyle='numbers', subdivision='none', clickTone='wood';
 let clickMuted = false; // mute click during voice calibration
+let warmingUp = false;   // true during 3-second silent warm-up
 let currentBeatPos=1, tapTimes=[], flashEnabled=false;
 
 // beatWord() defined below uses countLang
@@ -1227,6 +1229,7 @@ function synthBird(beat, vol) {
 }
 
 function speakBeat(beat, scheduledTime, tripletSyllable){
+  if (warmingUp) return; // silent during warm-up
   const t = scheduledTime || (audioCtx ? audioCtx.currentTime : 0);
   const style=effectiveVoiceStyle();
   if(style==='silent') return;
@@ -1331,6 +1334,7 @@ function flashScreen(isOne){
 }
 
 function flashBeat(beat){
+  if (warmingUp) return; // no flash during warm-up
   const numEl=document.getElementById('beat-num');
   const wordEl=document.getElementById('beat-word');
   const isOne=beat===1;
@@ -1467,14 +1471,33 @@ async function startMetronome(){
   } catch(e){}
   if(!audioCtx){ audioCtx=new(window.AudioContext||window.webkitAudioContext)(); }
   if(audioCtx.state==='suspended') await audioCtx.resume();
-  running=true; beatQueue=[]; currentBeatPos=1;
+  running=true; warmingUp=true; beatQueue=[]; currentBeatPos=1;
   nextBeatTime=audioCtx.currentTime+0.12;
   resetCadence();
   scheduler(); drawTimer=requestAnimationFrame(drawLoop);
-  document.getElementById('press-hint').innerHTML=(T[uiLang]||T.en).pressStop;
-
+  document.getElementById('press-hint').innerHTML='<em>warming up...</em>';
   document.getElementById('beat-display').classList.add('running');
   document.getElementById('beat-word').textContent='';
+  document.getElementById('beat-num').textContent='';
+
+  // Fire warmup utterances immediately to prime TTS engine and measure lag
+  var _wuWords = ['','',''];
+  _wuWords.forEach(function(w, i) {
+    setTimeout(function() {
+      if (!running) return;
+      var u = new SpeechSynthesisUtterance(w || 'ready');
+      u.volume = 0.01;
+      u.rate = 2;
+      window.speechSynthesis.speak(u);
+    }, i * 800);
+  });
+
+  // After 3 seconds, end warm-up and begin real count
+  setTimeout(function() {
+    if (!running) return;
+    warmingUp = false;
+    document.getElementById('press-hint').innerHTML=(T[uiLang]||T.en).pressStop;
+  }, 3000);
 }
 
 function stopMetronome(){
@@ -1487,6 +1510,7 @@ function stopMetronome(){
   document.getElementById('press-hint').innerHTML=(T[uiLang]||T.en).pressStart;
 
   document.getElementById('beat-display').classList.remove('running');
+  const wn = document.getElementById('warmup-note'); if(wn) wn.style.opacity='1';
   if(document.body.classList.contains('fs-mode')) toggleFS();
 }
 
